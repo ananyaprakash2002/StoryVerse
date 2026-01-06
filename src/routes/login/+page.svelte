@@ -190,6 +190,11 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-md);
+		align-items: stretch;
+	}
+
+	form :global(.btn) {
+		width: 100%;
 	}
 
 	.error-message {

@@ -112,18 +112,23 @@ h6 {
 h1 {
 	font-size: var(--font-size-4xl);
 }
+
 h2 {
 	font-size: var(--font-size-3xl);
 }
+
 h3 {
 	font-size: var(--font-size-2xl);
 }
+
 h4 {
 	font-size: var(--font-size-xl);
 }
+
 h5 {
 	font-size: var(--font-size-lg);
 }
+
 h6 {
 	font-size: var(--font-size-base);
 }
@@ -182,6 +187,7 @@ a:hover {
 .btn {
 	display: inline-flex;
 	align-items: center;
+	justify-content: center;
 	gap: var(--space-sm);
 	padding: var(--space-sm) var(--space-lg);
 	font-size: var(--font-size-sm);
@@ -432,6 +438,7 @@ tr:hover {
 		transform: translateX(400px);
 		opacity: 0;
 	}
+
 	to {
 		transform: translateX(0);
 		opacity: 1;
