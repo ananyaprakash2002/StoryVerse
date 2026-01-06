@@ -11,12 +11,35 @@ export interface AuthResponse {
 }
 
 /**
- * Sign up a new user with email and password
+ * Sign up a new user with username, email and password
  */
-export async function signUp(email: string, password: string): Promise<AuthResponse> {
+export async function signUp(
+    username: string,
+    email: string,
+    password: string
+): Promise<AuthResponse> {
+    // Check if username already exists
+    const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .single();
+
+    if (existingProfile) {
+        return {
+            user: null,
+            error: { message: 'Username already taken' }
+        };
+    }
+
     const { data, error } = await supabase.auth.signUp({
         email,
-        password
+        password,
+        options: {
+            data: {
+                username: username
+            }
+        }
     });
 
     return {
@@ -26,11 +49,26 @@ export async function signUp(email: string, password: string): Promise<AuthRespo
 }
 
 /**
- * Sign in an existing user with email and password
+ * Sign in with username and password
  */
-export async function signIn(email: string, password: string): Promise<AuthResponse> {
+export async function signIn(username: string, password: string): Promise<AuthResponse> {
+    // Look up email from username
+    const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('username', username)
+        .single();
+
+    if (profileError || !profile) {
+        return {
+            user: null,
+            error: { message: 'Invalid username or password' }
+        };
+    }
+
+    // Sign in with the email
     const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: profile.email,
         password
     });
 

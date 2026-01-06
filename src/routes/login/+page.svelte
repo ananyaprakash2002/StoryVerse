@@ -6,11 +6,14 @@
 	import Button from '$lib/components/common/Button.svelte';
 
 	let isSignUp = false;
+	let username = '';
 	let email = '';
 	let password = '';
 	let confirmPassword = '';
 	let loading = false;
 	let error = '';
+	let showPassword = false;
+	let showConfirmPassword = false;
 
 	const handleSubmit = async (e: Event) => {
 		e.preventDefault();
@@ -29,7 +32,9 @@
 		loading = true;
 
 		try {
-			const result = isSignUp ? await signUp(email, password) : await signIn(email, password);
+			const result = isSignUp
+				? await signUp(username, email, password)
+				: await signIn(username, password);
 
 			if (result.error) {
 				error = result.error.message;
@@ -48,6 +53,8 @@
 	const toggleMode = () => {
 		isSignUp = !isSignUp;
 		error = '';
+		username = '';
+		email = '';
 		password = '';
 		confirmPassword = '';
 	};
@@ -63,26 +70,13 @@
 
 			<form on:submit={handleSubmit}>
 				<div class="form-group">
-					<label for="email" class="form-label">Email</label>
+					<label for="username" class="form-label">Username</label>
 					<input
-						type="email"
-						id="email"
+						type="text"
+						id="username"
 						class="form-input"
-						bind:value={email}
-						placeholder="your@email.com"
-						required
-						disabled={loading}
-					/>
-				</div>
-
-				<div class="form-group">
-					<label for="password" class="form-label">Password</label>
-					<input
-						type="password"
-						id="password"
-						class="form-input"
-						bind:value={password}
-						placeholder="••••••••"
+						bind:value={username}
+						placeholder="Enter username"
 						required
 						disabled={loading}
 					/>
@@ -90,16 +84,86 @@
 
 				{#if isSignUp}
 					<div class="form-group">
-						<label for="confirmPassword" class="form-label">Confirm Password</label>
+						<label for="email" class="form-label">Email</label>
 						<input
-							type="password"
-							id="confirmPassword"
+							type="email"
+							id="email"
 							class="form-input"
-							bind:value={confirmPassword}
+							bind:value={email}
+							placeholder="your@email.com"
+							required
+							disabled={loading}
+						/>
+					</div>
+				{/if}
+
+				<div class="form-group">
+					<label for="password" class="form-label">Password</label>
+					<div class="password-input-wrapper">
+						<input
+							type={showPassword ? 'text' : 'password'}
+							id="password"
+							class="form-input password-input"
+							bind:value={password}
 							placeholder="••••••••"
 							required
 							disabled={loading}
 						/>
+						<button
+							type="button"
+							class="password-toggle"
+							on:click={() => (showPassword = !showPassword)}
+							aria-label={showPassword ? 'Hide password' : 'Show password'}
+							tabindex="-1"
+						>
+							{#if showPassword}
+							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+								<circle cx="12" cy="12" r="3"></circle>
+							</svg>
+						{:else}
+							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+								<line x1="1" y1="1" x2="23" y2="23"></line>
+							</svg>
+						{/if}
+						</button>
+					</div>
+				</div>
+
+				{#if isSignUp}
+					<div class="form-group">
+						<label for="confirmPassword" class="form-label">Confirm Password</label>
+						<div class="password-input-wrapper">
+							<input
+								type={showConfirmPassword ? 'text' : 'password'}
+								id="confirmPassword"
+								class="form-input password-input"
+								bind:value={confirmPassword}
+								placeholder="••••••••"
+								required
+								disabled={loading}
+							/>
+							<button
+								type="button"
+								class="password-toggle"
+								on:click={() => (showConfirmPassword = !showConfirmPassword)}
+								aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+								tabindex="-1"
+							>
+								{#if showConfirmPassword}
+								<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+									<circle cx="12" cy="12" r="3"></circle>
+								</svg>
+							{:else}
+								<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+									<line x1="1" y1="1" x2="23" y2="23"></line>
+								</svg>
+							{/if}
+							</button>
+						</div>
 					</div>
 				{/if}
 
@@ -195,6 +259,38 @@
 
 	form :global(.btn) {
 		width: 100%;
+	}
+
+	.password-input-wrapper {
+		position: relative;
+		display: flex;
+		align-items: center;
+	}
+
+	.password-input-wrapper .password-input {
+		padding-right: 45px;
+	}
+
+	.password-toggle {
+		position: absolute;
+		right: 12px;
+		background: none;
+		border: none;
+		cursor: pointer;
+		font-size: 1.25rem;
+		padding: 4px 8px;
+		color: var(--text-muted);
+		transition: color var(--transition-fast);
+		user-select: none;
+	}
+
+	.password-toggle:hover {
+		color: var(--text-primary);
+	}
+
+	.password-toggle:focus {
+		outline: none;
+		color: var(--primary);
 	}
 
 	.error-message {
