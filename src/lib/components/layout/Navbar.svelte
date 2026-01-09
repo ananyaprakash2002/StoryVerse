@@ -7,10 +7,7 @@
 
 	const navItems = [
 		{ name: 'Dashboard', href: '/', icon: '📊' },
-		{ name: 'Books', href: '/books', icon: '📚' },
-		{ name: 'Manga', href: '/manga', icon: '📖' },
-		{ name: 'Anime', href: '/anime', icon: '🎬' },
-		{ name: 'Movies', href: '/movies', icon: '🎥' }
+		{ name: 'Categories', href: '/categories', icon: '📁' }
 	];
 
 	let showUserMenu = false;
