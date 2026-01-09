@@ -17,6 +17,7 @@
 		item: CategoryItem;
 	}> = [];
 	let categoryStats: Record<string, { total_items: number }> = {};
+	let allItems: CategoryItem[] = [];
 
 	onMount(async () => {
 		await loadData();
@@ -27,15 +28,24 @@
 		try {
 			categories = await getUserCategories();
 
-			// Load stats for each category
+			// Load stats and items for each category
 			const statsPromises = categories.map(async (cat) => {
 				const stats = await getCategoryStats(cat.id);
 				categoryStats[cat.id] = stats;
 				return stats.total_items;
 			});
 
-			const itemCounts = await Promise.all(statsPromises);
+			const itemsPromises = categories.map(async (cat) => {
+				return await getItems(cat.id);
+			});
+
+			const [itemCounts, itemsArrays] = await Promise.all([
+				Promise.all(statsPromises),
+				Promise.all(itemsPromises)
+			]);
+
 			totalItems = itemCounts.reduce((sum, count) => sum + count, 0);
+			allItems = itemsArrays.flat();
 
 			// Load recent items from all categories
 			const recentPromises = categories.map(async (cat) => {
@@ -82,6 +92,29 @@
 		const values = Object.values(item.data).filter((v) => v && typeof v === 'string');
 		return values[0] || 'Untitled';
 	}
+
+	// Calculate items added in last 7 and 30 days
+	$: itemsLast7Days = allItems.filter((item) => {
+		const daysSince = (Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60 * 24);
+		return daysSince <= 7;
+	}).length;
+
+	$: itemsLast30Days = allItems.filter((item) => {
+		const daysSince = (Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60 * 24);
+		return daysSince <= 30;
+	}).length;
+
+	// Top categories by activity
+	$: topCategories = categories
+		.map((cat) => ({
+			...cat,
+			itemCount: categoryStats[cat.id]?.total_items || 0,
+			percentage: totalItems > 0 ? ((categoryStats[cat.id]?.total_items || 0) / totalItems) * 100 : 0
+		}))
+		.sort((a, b) => b.itemCount - a.itemCount)
+		.slice(0, 5);
+
+	$: mostActiveCategory = topCategories[0];
 </script>
 
 <div class="page container">
@@ -105,25 +138,72 @@
 			<Button variant="primary" onClick={() => goto('/categories')}>Create Category</Button>
 		</div>
 	{:else}
-		<!-- Quick Stats -->
-		<div class="quick-stats">
-			<div class="stat-item">
-				<span class="stat-number">{categories.length}</span>
-				<span class="stat-text">{categories.length === 1 ? 'Category' : 'Categories'}</span>
+		<!-- Enhanced Quick Stats -->
+		<div class="stats-row">
+			<div class="stat-box">
+				<div class="stat-icon">📊</div>
+				<div class="stat-content">
+					<div class="stat-value">{categories.length}</div>
+					<div class="stat-label">{categories.length === 1 ? 'Category' : 'Categories'}</div>
+				</div>
 			</div>
-			<div class="divider"></div>
-			<div class="stat-item">
-				<span class="stat-number">{totalItems}</span>
-				<span class="stat-text">Items Tracked</span>
+
+			<div class="stat-box">
+				<div class="stat-icon">📝</div>
+				<div class="stat-content">
+					<div class="stat-value">{totalItems}</div>
+					<div class="stat-label">Total Items</div>
+				</div>
 			</div>
-			<div class="divider"></div>
-			<div class="stat-item">
-				<span class="stat-number">{recentActivity.length > 0 ? formatDate(recentActivity[0].item.created_at) : '-'}</span>
-				<span class="stat-text">Last Activity</span>
+
+			<div class="stat-box">
+				<div class="stat-icon">🔥</div>
+				<div class="stat-content">
+					<div class="stat-value">{itemsLast7Days}</div>
+					<div class="stat-label">Last 7 Days</div>
+				</div>
+			</div>
+
+			<div class="stat-box">
+				<div class="stat-icon">📈</div>
+				<div class="stat-content">
+					<div class="stat-value">{itemsLast30Days}</div>
+					<div class="stat-label">Last 30 Days</div>
+				</div>
 			</div>
 		</div>
 
-		<!-- Your Categories - Immediately Actionable -->
+		<!-- Top Categories Distribution -->
+		{#if topCategories.length > 0}
+			<div class="section">
+				<h2>Category Distribution</h2>
+				<div class="distribution-list card">
+					{#each topCategories as category}
+						<button
+							class="distribution-item"
+							on:click={() => goto(`/categories/${category.id}`)}
+						>
+							<div class="distribution-header">
+								<span class="category-icon-small" style="color: {category.color || 'var(--primary)'}">
+									{category.icon || '📁'}
+								</span>
+								<span class="category-name">{category.name}</span>
+								<span class="item-count">{category.itemCount} items</span>
+							</div>
+							<div class="progress-bar">
+								<div
+									class="progress-fill"
+									style="width: {category.percentage}%; background-color: {category.color || 'var(--primary)'}"
+								></div>
+							</div>
+							<div class="percentage-label">{category.percentage.toFixed(1)}%</div>
+						</button>
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		<!-- Your Categories Grid -->
 		<div class="section">
 			<div class="section-header">
 				<h2>Your Categories</h2>
@@ -219,42 +299,115 @@
 		margin-bottom: var(--space-lg);
 	}
 
-	.quick-stats {
+	.stats-row {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: var(--space-lg);
+		margin-bottom: var(--space-2xl);
+	}
+
+	.stat-box {
 		display: flex;
 		align-items: center;
-		justify-content: space-around;
+		gap: var(--space-lg);
+		padding: var(--space-xl);
 		background: var(--bg-secondary);
 		border-radius: var(--radius-lg);
-		padding: var(--space-xl);
-		margin-bottom: var(--space-2xl);
 		border: 1px solid var(--border-color);
+		transition: all var(--transition-base);
 	}
 
-	.stat-item {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: var(--space-xs);
+	.stat-box:hover {
+		transform: translateY(-2px);
+		box-shadow: var(--shadow-lg);
 	}
 
-	.stat-number {
+	.stat-icon {
+		font-size: 2.5rem;
+	}
+
+	.stat-content {
+		flex: 1;
+	}
+
+	.stat-value {
 		font-size: 2.5rem;
 		font-weight: 700;
 		color: var(--primary);
 		line-height: 1;
 	}
 
-	.stat-text {
+	.stat-label {
 		font-size: var(--font-size-sm);
 		color: var(--text-muted);
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
+		margin-top: var(--space-xs);
 	}
 
-	.divider {
-		width: 1px;
-		height: 40px;
-		background: var(--border-color);
+	.distribution-list {
+		padding: var(--space-lg);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-lg);
+	}
+
+	.distribution-item {
+		display: block;
+		text-align: left;
+		background: transparent;
+		border: none;
+		padding: var(--space-md);
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		transition: background var(--transition-fast);
+		color: inherit;
+		width: 100%;
+	}
+
+	.distribution-item:hover {
+		background: rgba(96, 165, 250, 0.05);
+	}
+
+	.distribution-header {
+		display: flex;
+		align-items: center;
+		gap: var(--space-md);
+		margin-bottom: var(--space-sm);
+	}
+
+	.category-icon-small {
+		font-size: 1.5rem;
+	}
+
+	.category-name {
+		font-weight: 500;
+		flex: 1;
+	}
+
+	.item-count {
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	.progress-bar {
+		height: 8px;
+		background: var(--bg-tertiary);
+		border-radius: var(--radius-sm);
+		overflow: hidden;
+		margin-bottom: var(--space-xs);
+	}
+
+	.progress-fill {
+		height: 100%;
+		transition: width var(--transition-base);
+		border-radius: var(--radius-sm);
+	}
+
+	.percentage-label {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		text-align: right;
 	}
 
 	.section {
@@ -323,12 +476,6 @@
 		font-size: var(--font-size-xs);
 		color: var(--text-muted);
 		text-transform: uppercase;
-	}
-
-	.category-name {
-		font-size: var(--font-size-xl);
-		margin-bottom: var(--space-sm);
-		color: var(--text-primary);
 	}
 
 	.category-desc {
@@ -454,14 +601,8 @@
 			font-size: 2rem;
 		}
 
-		.quick-stats {
-			flex-direction: column;
-			gap: var(--space-lg);
-		}
-
-		.divider {
-			width: 100%;
-			height: 1px;
+		.stats-row {
+			grid-template-columns: 1fr;
 		}
 
 		.categories-grid {
