@@ -9,21 +9,78 @@
 	import Toast from '$lib/components/common/Toast.svelte';
 
 	let loading = true;
+	let inactivityTimer: ReturnType<typeof setTimeout> | null = null;
+	const INACTIVITY_TIMEOUT = 60 * 60 * 1000; // 1 hour in milliseconds
+
+	function resetInactivityTimer() {
+		// Clear existing timer
+		if (inactivityTimer) {
+			clearTimeout(inactivityTimer);
+		}
+
+		// Only set timer if user is logged in
+		if ($user) {
+			inactivityTimer = setTimeout(async () => {
+				// Log out user after inactivity
+				const { signOut } = await import('$lib/supabase/auth');
+				await signOut();
+				user.set(null);
+				goto('/login');
+			}, INACTIVITY_TIMEOUT);
+		}
+	}
 
 	onMount(() => {
 		// Get initial user
 		getCurrentUser().then((currentUser) => {
 			user.set(currentUser);
 			loading = false;
+			
+			// Start inactivity timer if user is logged in
+			if (currentUser) {
+				resetInactivityTimer();
+			}
 		});
 
 		// Listen for auth changes
 		const { data } = onAuthStateChange((newUser) => {
 			user.set(newUser);
+			
+			// Reset timer on auth state change
+			if (newUser) {
+				resetInactivityTimer();
+			} else if (inactivityTimer) {
+				clearTimeout(inactivityTimer);
+				inactivityTimer = null;
+			}
 		});
 
+		// Track user activity
+		const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+		
+		activityEvents.forEach((event) => {
+			window.addEventListener(event, resetInactivityTimer, { passive: true });
+		});
+		// Logout when tab/window closes
+		const handleBeforeUnload = async () => {
+			if ($user) {
+				const { signOut } = await import('$lib/supabase/auth');
+				await signOut();
+			}
+		};
+		
+		window.addEventListener('beforeunload', handleBeforeUnload);
+
+
 		return () => {
+			// Cleanup
 			data?.subscription.unsubscribe();
+			if (inactivityTimer) {
+				clearTimeout(inactivityTimer);
+			}
+			activityEvents.forEach((event) => {
+				window.removeEventListener(event, resetInactivityTimer);
+			});
 		};
 	});
 

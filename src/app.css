@@ -274,6 +274,15 @@ a:hover {
 	transition: all var(--transition-fast);
 }
 
+.form-select {
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394a3b8' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right var(--space-md) center;
+	padding-right: calc(var(--space-md) * 2.5);
+	cursor: pointer;
+}
+
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {
@@ -292,6 +301,22 @@ a:hover {
 	height: 1.25rem;
 	accent-color: var(--primary);
 	cursor: pointer;
+}
+
+.form-select[multiple] {
+	min-height: 120px;
+	max-height: 200px;
+}
+
+.form-select[multiple] option {
+	padding: var(--space-sm);
+	border-radius: var(--radius-sm);
+	margin-bottom: var(--space-xs);
+}
+
+.form-select[multiple] option:checked {
+	background: linear-gradient(135deg, rgba(96, 165, 250, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%);
+	color: var(--primary);
 }
 
 /* ==================== TABLES ==================== */

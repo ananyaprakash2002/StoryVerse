@@ -157,16 +157,24 @@
 										{:else if field.field_type === 'rating'}
 											{'★'.repeat(item.data[field.name] || 0)}
 										{:else if field.field_type === 'tags'}
-											{#if Array.isArray(item.data[field.name])}
-												{item.data[field.name].join(', ')}
+											{#if Array.isArray(item.data[field.name]) && item.data[field.name].length > 0}
+												<div class="chips">
+													{#each item.data[field.name] as tag}
+														<span class="chip">{tag}</span>
+													{/each}
+												</div>
 											{:else}
-												{item.data[field.name] || '-'}
+												-
 											{/if}
 										{:else if field.field_type === 'multiselect'}
-											{#if Array.isArray(item.data[field.name])}
-												{item.data[field.name].join(', ')}
+											{#if Array.isArray(item.data[field.name]) && item.data[field.name].length > 0}
+												<div class="chips">
+													{#each item.data[field.name] as option}
+														<span class="chip">{option}</span>
+													{/each}
+												</div>
 											{:else}
-												{item.data[field.name] || '-'}
+												-
 											{/if}
 										{:else if field.field_type === 'url'}
 											{#if item.data[field.name]}
@@ -290,6 +298,23 @@
 
 	.url-link:hover {
 		text-decoration: underline;
+	}
+
+	.chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+
+	.chip {
+		display: inline-block;
+		padding: var(--space-xs) var(--space-sm);
+		background: rgba(96, 165, 250, 0.1);
+		color: var(--primary);
+		border-radius: var(--radius-sm);
+		font-size: var(--font-size-xs);
+		font-weight: 500;
+		border: 1px solid rgba(96, 165, 250, 0.2);
 	}
 
 	@media (max-width: 768px) {
