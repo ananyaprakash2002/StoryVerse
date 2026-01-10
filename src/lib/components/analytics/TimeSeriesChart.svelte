@@ -29,10 +29,24 @@
 	let canvasElement: HTMLCanvasElement;
 	let chart: Chart | null = null;
 	let mounted = $state(false);
+	let currentTheme = $state('dark');
 
 	onMount(() => {
 		mounted = true;
+		currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+		
+		// Watch for theme changes
+		const observer = new MutationObserver((mutations) => {
+			mutations.forEach((mutation) => {
+				if (mutation.attributeName === 'data-theme') {
+					currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+				}
+			});
+		});
+		observer.observe(document.documentElement, { attributes: true });
+		
 		return () => {
+			observer.disconnect();
 			if (chart) {
 				chart.destroy();
 				chart = null;
@@ -40,8 +54,11 @@
 		};
 	});
 
-	// Initialize chart when canvas and data are ready
+	// Initialize chart when canvas and data are ready, or theme changes
 	$effect(() => {
+		// Reference currentTheme so effect re-runs on theme change
+		const theme = currentTheme;
+		
 		if (!mounted || !canvasElement || !data || data.length === 0) {
 			return;
 		}
@@ -98,7 +115,7 @@
 							beginAtZero: true,
 							ticks: {
 								stepSize: 1,
-								color: '#ffffff'
+								color: document.documentElement.getAttribute('data-theme') !== 'light' ? '#f9fafb' : '#24292f'
 							},
 							grid: {
 								color: 'rgba(255, 255, 255, 0.1)'
@@ -106,7 +123,7 @@
 						},
 						x: {
 							ticks: {
-								color: '#ffffff',
+								color: document.documentElement.getAttribute('data-theme') !== 'light' ? '#f9fafb' : '#24292f',
 								maxRotation: 45,
 								minRotation: 0
 							},

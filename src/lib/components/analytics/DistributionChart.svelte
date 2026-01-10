@@ -18,6 +18,7 @@
 	let canvasElement: HTMLCanvasElement;
 	let chart: Chart | null = null;
 	let mounted = $state(false);
+	let currentTheme = $state('dark');
 
 	function handleChartClick(event: any) {
 		if (!chart || !clickable) return;
@@ -35,7 +36,20 @@
 
 	onMount(() => {
 		mounted = true;
+		currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+		
+		// Watch for theme changes
+		const observer = new MutationObserver((mutations) => {
+			mutations.forEach((mutation) => {
+				if (mutation.attributeName === 'data-theme') {
+					currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+				}
+			});
+		});
+		observer.observe(document.documentElement, { attributes: true });
+		
 		return () => {
+			observer.disconnect();
 			if (chart) {
 				chart.destroy();
 				chart = null;
@@ -43,8 +57,11 @@
 		};
 	});
 
-	// Initialize chart when canvas and data are ready
+	// Initialize chart when canvas and data are ready, or theme changes
 	$effect(() => {
+		// Reference currentTheme so effect re-runs on theme change
+		const theme = currentTheme;
+		
 		if (!mounted || !canvasElement || !data || data.length === 0) {
 			return;
 		}
@@ -76,7 +93,7 @@
 						legend: {
 							position: 'right',
 							labels: {
-								color: '#ffffff',
+								color: document.documentElement.getAttribute('data-theme') !== 'light' ? '#f9fafb' : '#24292f',
 								padding: 15,
 								font: {
 									size: 13
@@ -95,7 +112,7 @@
 											return {
 												text: `${label} (${value}) ${percentage}%`,
 												fillStyle: dataset.backgroundColor?.[i] as string,
-												fontColor: '#ffffff',
+												fontColor: document.documentElement.getAttribute('data-theme') !== 'light' ? '#f9fafb' : '#24292f',
 												hidden: false,
 												index: i
 											};

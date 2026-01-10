@@ -11,6 +11,8 @@
 	import Loader from '$lib/components/common/Loader.svelte';
 	import DynamicFormEnhanced from '$lib/components/category/DynamicFormEnhanced.svelte';
 	import CoverImage from '$lib/components/media/CoverImage.svelte';
+	import GridView from '$lib/components/category/GridView.svelte';
+	import ViewToggle from '$lib/components/category/ViewToggle.svelte';
 
 	let category: Category | null = null;
 	let items: CategoryItem[] = [];
@@ -30,10 +32,18 @@
 	let columnFilters: Record<string, string> = {};
 	let selectedItems = new Set<string>();
 	let visibleColumns = new Set<string>();
+	let viewMode: 'table' | 'grid' = 'table';
 
 	$: categoryId = $page.params.id;
 
 	onMount(async () => {
+		// Load view preference from localStorage
+		const saved = localStorage.getItem(`viewMode_${categoryId}`);
+		if (saved === 'table' || saved === 'grid') {
+			viewMode = saved;
+			console.log('Loaded saved view mode:', saved);
+		}
+		
 		await loadData();
 		
 		// Close dropdown when clicking outside
@@ -48,6 +58,13 @@
 			document.removeEventListener('click', handleClickOutside);
 		};
 	});
+
+	function handleViewChange(newView: 'table' | 'grid') {
+		console.log('handleViewChange called with:', newView);
+		viewMode = newView;
+		localStorage.setItem(`viewMode_${categoryId}`, newView);
+		console.log('viewMode is now:', viewMode);
+	}
 
 	async function loadData() {
 		loading = true;
@@ -342,6 +359,7 @@
 				</div>
 
 				<div class="toolbar-right">
+				<ViewToggle currentView={viewMode} on:change={(e) => handleViewChange(e.detail)} />
 				<span class="search-results">{filteredItems.length} of {items.length} items</span>
 			</div>
 			</div>
@@ -376,7 +394,17 @@
 					Clear All Filters
 				</button>
 			</div>
+		{:else if viewMode === 'grid'}
+			<!-- Grid View -->
+			<GridView 
+				items={sortedItems}
+				categoryName={category?.name || ''}
+				onEdit={openEditModal}
+				onDelete={handleDelete}
+				onViewDetails={viewItemDetails}
+			/>
 		{:else}
+			<!-- Table View -->
 			<div class="table-container">
 				<table>
 					<thead>

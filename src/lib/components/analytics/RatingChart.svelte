@@ -26,9 +26,37 @@
 
 	// Color gradient from red to green
 	const ratingColors = ['#ef4444', '#f59e0b', '#eab308', '#84cc16', '#22c55e'];
+	let currentTheme = $state('dark');
 
-	// Initialize chart when canvas is ready
+	import { onMount } from 'svelte';
+	
+	onMount(() => {
+		currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+		
+		// Watch for theme changes
+		const observer = new MutationObserver((mutations) => {
+			mutations.forEach((mutation) => {
+				if (mutation.attributeName === 'data-theme') {
+					currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+				}
+			});
+		});
+		observer.observe(document.documentElement, { attributes: true });
+		
+		return () => {
+			observer.disconnect();
+			if (chart) {
+				chart.destroy();
+				chart = null;
+			}
+		};
+	});
+
+	// Initialize chart when canvas is ready, or theme changes
 	$effect(() => {
+		// Reference currentTheme so effect re-runs on theme change
+		const theme = currentTheme;
+		
 		if (!canvasRef || !data) return;
 
 		// Destroy existing chart if it exists
@@ -76,7 +104,7 @@
 						beginAtZero: true,
 						ticks: {
 							stepSize: 1,
-							color: '#ffffff'
+							color: document.documentElement.getAttribute('data-theme') !== 'light' ? '#f9fafb' : '#24292f'
 						},
 						grid: {
 							color: 'rgba(255, 255, 255, 0.1)'
@@ -84,7 +112,7 @@
 					},
 					x: {
 						ticks: {
-							color: '#ffffff'
+							color: document.documentElement.getAttribute('data-theme') !== 'light' ? '#f9fafb' : '#24292f'
 						},
 						grid: {
 							display: false

@@ -95,6 +95,31 @@
 			</section>
 		{/if}
 
+		<!-- Overall Stats Summary -->
+		<section class="section">
+			<div class="stats-summary card">
+				<h3>Summary</h3>
+				<div class="stats-grid">
+					<div class="stat">
+						<span class="stat-label">Total Categories</span>
+						<span class="stat-value">{analytics.overallStats.totalCategories}</span>
+					</div>
+					<div class="stat">
+						<span class="stat-label">Total Items</span>
+						<span class="stat-value">{analytics.overallStats.totalItems}</span>
+					</div>
+					<div class="stat">
+						<span class="stat-label">Categories with Items</span>
+						<span class="stat-value">{analytics.overallStats.categoriesWithItems}</span>
+					</div>
+					<div class="stat">
+						<span class="stat-label">Avg Items per Category</span>
+						<span class="stat-value">{analytics.overallStats.averageItemsPerCategory.toFixed(1)}</span>
+					</div>
+				</div>
+			</div>
+		</section>
+
 		<!-- Time Series Chart -->
 		{#if analytics.timeSeries.length > 0}
 			<section class="section">
@@ -120,31 +145,6 @@
 						<RatingChart data={analytics.ratingDistribution} />
 					</div>
 				{/if}
-			</div>
-		</section>
-
-		<!-- Overall Stats Summary -->
-		<section class="section">
-			<div class="stats-summary card">
-				<h3>Summary</h3>
-				<div class="stats-grid">
-					<div class="stat">
-						<span class="stat-label">Total Categories</span>
-						<span class="stat-value">{analytics.overallStats.totalCategories}</span>
-					</div>
-					<div class="stat">
-						<span class="stat-label">Total Items</span>
-						<span class="stat-value">{analytics.overallStats.totalItems}</span>
-					</div>
-					<div class="stat">
-						<span class="stat-label">Categories with Items</span>
-						<span class="stat-value">{analytics.overallStats.categoriesWithItems}</span>
-					</div>
-					<div class="stat">
-						<span class="stat-label">Avg Items per Category</span>
-						<span class="stat-value">{analytics.overallStats.averageItemsPerCategory.toFixed(1)}</span>
-					</div>
-				</div>
 			</div>
 		</section>
 	{:else}
