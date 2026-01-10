@@ -282,6 +282,15 @@
 
 	$: hasActiveFilters = searchQuery || Object.values(columnFilters).some((v) => v);
 	$: visibleFields = category?.fields?.filter(f => visibleColumns.has(f.name)) || [];
+	
+	// Define which columns to show in the table (only key fields)
+	$: tableColumns = category?.fields?.filter(f => {
+		const fieldName = f.name.toLowerCase();
+		return fieldName.includes('title') || 
+		       fieldName.includes('author') || 
+		       fieldName.includes('status') ||
+		       fieldName.includes('tag');
+	}) || [];
 </script>
 
 <div class="page container">
@@ -333,32 +342,8 @@
 				</div>
 
 				<div class="toolbar-right">
-					<!-- Column Visibility Dropdown -->
-					<div class="dropdown" class:open={showColumnDropdown}>
-						<button class="btn btn-sm btn-secondary" on:click|stopPropagation={() => showColumnDropdown = !showColumnDropdown}>
-							🔧 Columns ({visibleColumns.size}/{category.fields?.length || 0})
-						</button>
-						<div class="dropdown-menu">
-							<div class="dropdown-header">
-								<button class="link-btn" on:click={showAllColumns}>Show All</button>
-								<span>•</span>
-								<button class="link-btn" on:click={hideAllColumns}>Hide All</button>
-							</div>
-							{#each category.fields || [] as field}
-								<label class="dropdown-item">
-									<input
-										type="checkbox"
-										checked={visibleColumns.has(field.name)}
-										on:change={() => toggleColumnVisibility(field.name)}
-									/>
-									<span>{field.label}</span>
-								</label>
-							{/each}
-						</div>
-					</div>
-
-					<span class="search-results">{filteredItems.length} of {items.length} items</span>
-				</div>
+				<span class="search-results">{filteredItems.length} of {items.length} items</span>
+			</div>
 			</div>
 
 			<!-- Bulk Actions Bar -->
@@ -404,7 +389,7 @@
 									on:change={toggleSelectAll}
 								/>
 							</th>
-							{#each visibleFields as field}
+							{#each tableColumns as field}
 								<th>
 									<button
 										class="sort-button"
@@ -423,21 +408,6 @@
 								</th>
 							{/each}
 							<th>Actions</th>
-						</tr>
-						<!-- Column Filters Row -->
-						<tr class="filter-row">
-							<th></th>
-							{#each visibleFields as field}
-								<th>
-									<input
-										type="text"
-										class="form-input column-filter"
-										placeholder="Filter..."
-										bind:value={columnFilters[field.name]}
-									/>
-								</th>
-							{/each}
-							<th></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -460,7 +430,7 @@
 										on:change={() => toggleSelection(item.id)}
 									/>
 								</td>
-								{#each visibleFields as field}
+								{#each tableColumns as field}
 									<td>
 										{#if field.field_type === 'boolean'}
 											{item.data[field.name] ? '✓' : '✗'}
@@ -543,6 +513,17 @@
 <Modal bind:isOpen={showDetailsModal} title="Item Details">
 	{#if viewingItem && category}
 		<div class="details-view">
+			<!-- Cover Image -->
+			{#if viewingItem.cover_image_url}
+				<div class="details-cover">
+					<CoverImage 
+						imageUrl={viewingItem.cover_image_url} 
+						title={viewingItem.data.title || viewingItem.data.name || 'Item'}
+						size="lg"
+					/>
+				</div>
+			{/if}
+
 			<div class="details-grid">
 				{#each category.fields || [] as field}
 					<div class="detail-card">
@@ -877,7 +858,15 @@
 	.details-view {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-xl);
+		gap: var(--space-lg);
+	}
+
+	.details-cover {
+		display: flex;
+		justify-content: center;
+		padding: var(--space-md);
+		background: var(--bg-secondary);
+		border-radius: var(--radius-md);
 	}
 
 	.details-grid {

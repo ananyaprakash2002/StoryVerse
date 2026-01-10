@@ -53,13 +53,15 @@
 	}
 
 	async function handleDelete() {
-		if (!currentImagePath) return;
-
 		deleting = true;
 		error = '';
 
 		try {
-			await deleteImage(currentImagePath);
+			// Only try to delete from storage if there's a path (uploaded image)
+			if (currentImagePath) {
+				await deleteImage(currentImagePath);
+			}
+			// Always dispatch delete event to clear the image from the form
 			dispatch('delete');
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to delete image';
@@ -109,10 +111,10 @@
 				<img src={currentImageUrl} alt="Cover preview" />
 			</div>
 			<div class="preview-actions">
-				<Button variant="secondary" size="sm" onclick={triggerFileInput} disabled={uploading || deleting}>
+				<Button variant="secondary" size="sm" onClick={triggerFileInput} disabled={uploading || deleting}>
 					{uploading ? 'Uploading...' : '🔄 Replace'}
 				</Button>
-				<Button variant="danger" size="sm" onclick={handleDelete} disabled={uploading || deleting}>
+				<Button variant="danger" size="sm" onClick={handleDelete} disabled={uploading || deleting}>
 					{deleting ? 'Deleting...' : '🗑️ Remove'}
 				</Button>
 			</div>
