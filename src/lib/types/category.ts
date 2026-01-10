@@ -75,11 +75,19 @@ export interface CategoryItem {
     data: Record<string, any>; // Dynamic data based on category fields
     created_at: string;
     updated_at: string;
+    cover_image_url?: string; // URL to cover image (external or Supabase storage)
+    cover_image_path?: string; // Storage path if uploaded to Supabase storage
+    api_source?: 'google_books' | null; // Source API for auto-filled data
+    api_id?: string; // ID from the external API for reference
 }
 
 // Input type for creating/updating items
 export interface CategoryItemInput {
     data: Record<string, any>;
+    cover_image_url?: string;
+    cover_image_path?: string;
+    api_source?: 'google_books' | null;
+    api_id?: string;
 }
 
 // Template for creating categories from predefined structures

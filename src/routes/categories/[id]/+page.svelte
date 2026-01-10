@@ -9,7 +9,8 @@
 	import Button from '$lib/components/common/Button.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Loader from '$lib/components/common/Loader.svelte';
-	import DynamicForm from '$lib/components/category/DynamicForm.svelte';
+	import DynamicFormEnhanced from '$lib/components/category/DynamicFormEnhanced.svelte';
+	import CoverImage from '$lib/components/media/CoverImage.svelte';
 
 	let category: Category | null = null;
 	let items: CategoryItem[] = [];
@@ -218,14 +219,22 @@
 		showDetailsModal = false;
 	}
 
-	async function handleSubmit(data: Record<string, any>) {
+	async function handleSubmit(data: Record<string, any>, imageData?: { url: string; path: string; apiSource?: string; apiId?: string }) {
 		saving = true;
 		try {
+			const itemData = {
+				data,
+				cover_image_url: imageData?.url || '',
+				cover_image_path: imageData?.path || '',
+				api_source: imageData?.apiSource || '',
+				api_id: imageData?.apiId || ''
+			};
+
 			if (editingItem) {
-				await updateItem(editingItem.id, { data });
+				await updateItem(editingItem.id, itemData);
 				toasts.success('Item updated!');
 			} else {
-				await createItem(categoryId, { data });
+				await createItem(categoryId, itemData);
 				toasts.success('Item created!');
 			}
 			showModal = false;
@@ -518,12 +527,14 @@
 <!-- Edit/Add Modal -->
 <Modal bind:isOpen={showModal} title={editingItem ? 'Edit Item' : 'Add Item'}>
 	{#if category}
-		<DynamicForm
+		<DynamicFormEnhanced
 			fields={category.fields || []}
 			bind:values={formValues}
 			onSubmit={handleSubmit}
 			submitLabel={editingItem ? 'Update' : 'Create'}
 			loading={saving}
+			categoryName={category.name}
+			itemId={editingItem?.id || ''}
 		/>
 	{/if}
 </Modal>
@@ -775,6 +786,11 @@
 	.checkbox-col {
 		width: 40px;
 		text-align: center;
+	}
+
+	.cover-col {
+		width: 60px;
+		padding: var(--space-xs);
 	}
 
 	.filter-row th {

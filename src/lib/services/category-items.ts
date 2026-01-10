@@ -44,7 +44,11 @@ export async function createItem(
         .insert({
             category_id: categoryId,
             user_id: user.id,
-            data: itemData.data
+            data: itemData.data,
+            cover_image_url: itemData.cover_image_url || null,
+            cover_image_path: itemData.cover_image_path || null,
+            api_source: itemData.api_source || null,
+            api_id: itemData.api_id || null
         })
         .select()
         .single();
@@ -61,6 +65,10 @@ export async function updateItem(id: string, itemData: CategoryItemInput): Promi
         .from('category_items')
         .update({
             data: itemData.data,
+            cover_image_url: itemData.cover_image_url !== undefined ? itemData.cover_image_url : undefined,
+            cover_image_path: itemData.cover_image_path !== undefined ? itemData.cover_image_path : undefined,
+            api_source: itemData.api_source !== undefined ? itemData.api_source : undefined,
+            api_id: itemData.api_id !== undefined ? itemData.api_id : undefined,
             updated_at: new Date().toISOString()
         })
         .eq('id', id)

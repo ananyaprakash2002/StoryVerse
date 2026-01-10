@@ -7,7 +7,8 @@
 
 	const navItems = [
 		{ name: 'Dashboard', href: '/', icon: '📊' },
-		{ name: 'Categories', href: '/categories', icon: '📁' }
+		{ name: 'Categories', href: '/categories', icon: '📁' },
+		{ name: 'Analytics', href: '/analytics', icon: '📈' }
 	];
 
 	let showUserMenu = false;

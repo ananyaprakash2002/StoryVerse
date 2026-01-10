@@ -4,7 +4,7 @@
 	export let onClose: (() => void) | undefined = undefined;
 
 	const handleClose = () => {
-		isOpen = false;
+		isOpen = false; // Needed for bind:isOpen to work
 		if (onClose) onClose();
 	};
 
