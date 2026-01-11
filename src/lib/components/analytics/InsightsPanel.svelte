@@ -61,13 +61,23 @@
 	}
 
 	.insight-card.achievement {
-		background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(139, 92, 246, 0.1));
-		border-color: rgba(96, 165, 250, 0.3);
+		/* Use the same background and border as other cards to keep visual consistency across themes */
+		background: var(--bg-secondary);
+		border-color: var(--border-color);
 	}
 
+	/* Keep the icon visually inline with other cards: remove boxed container */
 	.insight-icon {
 		font-size: 2.5rem;
 		flex-shrink: 0;
+		background: transparent;
+		border: none;
+		padding: 0;
+		box-shadow: none;
+		border-radius: 0;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.insight-content {

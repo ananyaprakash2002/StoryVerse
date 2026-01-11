@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { CategoryField } from '$lib/types/category';
-	import type { BookData } from '$lib/services/api-integrations/google-books';
+	import type { BookData } from '$lib/types/api';
 	import DynamicField from './DynamicField.svelte';
 	import Button from '$lib/components/common/Button.svelte';
 	import APISearchModal from '$lib/components/media/APISearchModal.svelte';

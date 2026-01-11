@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { searchBooks, searchByISBN, type BookData } from '$lib/services/api-integrations/google-books';
+	import { searchBooks, searchByISBN } from '$lib/services/api-integrations/google-books';
+	import type { BookData } from '$lib/types/api';
+	import { error as logError } from '$lib/utils/logger';
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Button from '$lib/components/common/Button.svelte';
 	import Loader from '$lib/components/common/Loader.svelte';
@@ -42,7 +44,7 @@
 			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to search books';
-			console.error('Search error:', err);
+			logError('Search error:', err);
 		} finally {
 			searching = false;
 		}

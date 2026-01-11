@@ -5,7 +5,7 @@
 	import { getCategory, deleteCategory } from '$lib/services/categories';
 	import { getItems, createItem, updateItem, deleteItem } from '$lib/services/category-items';
 	import { toasts } from '$lib/stores/ui';
-	import type { Category, CategoryItem } from '$lib/types/category';
+	import type { Category, CategoryItem, CategoryItemInput } from '$lib/types/category';
 	import Button from '$lib/components/common/Button.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Loader from '$lib/components/common/Loader.svelte';
@@ -34,29 +34,36 @@
 	let visibleColumns = new Set<string>();
 	let viewMode: 'table' | 'grid' = 'table';
 
-	$: categoryId = $page.params.id;
+	let categoryId: string = '';
+	$: categoryId = $page.params.id ?? '';
 
-	onMount(async () => {
-		// Load view preference from localStorage
-		const saved = localStorage.getItem(`viewMode_${categoryId}`);
-		if (saved === 'table' || saved === 'grid') {
-			viewMode = saved;
-			console.log('Loaded saved view mode:', saved);
-		}
-		
-		await loadData();
-		
-		// Close dropdown when clicking outside
-		const handleClickOutside = (e: MouseEvent) => {
-			if (!(e.target as HTMLElement).closest('.dropdown')) {
-				showColumnDropdown = false;
-			}
-		};
-		document.addEventListener('click', handleClickOutside);
-		
-		return () => {
-			document.removeEventListener('click', handleClickOutside);
-		};
+	onMount(() => {
+		// Use inner async function to avoid returning a Promise from onMount
+	 	const init = async () => {
+	 		// Load view preference from localStorage
+	 		const saved = localStorage.getItem(`viewMode_${categoryId}`);
+	 		if (saved === 'table' || saved === 'grid') {
+	 			viewMode = saved;
+	 			console.log('Loaded saved view mode:', saved);
+	 		}
+
+	 		await loadData();
+	 	};
+
+	 	init();
+
+	 	// Close dropdown when clicking outside
+	 	const handleClickOutside = (e: MouseEvent) => {
+	 		const target = e.target as HTMLElement | null;
+	 		if (!target || !target.closest('.dropdown')) {
+	 			showColumnDropdown = false;
+	 		}
+	 	};
+	 	document.addEventListener('click', handleClickOutside);
+
+	 	return () => {
+	 		document.removeEventListener('click', handleClickOutside);
+	 	};
 	});
 
 	function handleViewChange(newView: 'table' | 'grid') {
@@ -239,11 +246,11 @@
 	async function handleSubmit(data: Record<string, any>, imageData?: { url: string; path: string; apiSource?: string; apiId?: string }) {
 		saving = true;
 		try {
-			const itemData = {
+			const itemData: CategoryItemInput = {
 				data,
 				cover_image_url: imageData?.url || '',
 				cover_image_path: imageData?.path || '',
-				api_source: imageData?.apiSource || '',
+				api_source: imageData?.apiSource === 'google_books' ? 'google_books' : null,
 				api_id: imageData?.apiId || ''
 			};
 
@@ -442,11 +449,13 @@
 						{#each sortedItems as item}
 							<tr class="clickable-row" on:click={(e) => {
 								// Don't open details if clicking checkbox, button, or link
-								if (e.target instanceof HTMLInputElement || 
-								    e.target instanceof HTMLButtonElement || 
-								    e.target instanceof HTMLAnchorElement ||
-								    e.target.closest('button') ||
-								    e.target.closest('a')) {
+								const target = e.target as HTMLElement | null;
+								if (!target) return;
+								if (target instanceof HTMLInputElement || 
+									target instanceof HTMLButtonElement || 
+									target instanceof HTMLAnchorElement ||
+									target.closest('button') ||
+									target.closest('a')) {
 									return;
 								}
 								viewItemDetails(item);
@@ -612,14 +621,14 @@
 				</div>
 			</div>
 
-			<div class="details-actions">
-				<Button variant="primary" onClick={() => openEditModal(viewingItem)}>
-					Edit Item
-				</Button>
-				<button class="btn btn-danger" on:click={() => handleDelete(viewingItem)}>
-					Delete Item
-				</button>
-			</div>
+                <div class="details-actions">
+                	<Button variant="primary" onClick={() => openEditModal(viewingItem as CategoryItem)}>
+                		Edit Item
+                	</Button>
+                	<button class="btn btn-danger" on:click={() => handleDelete(viewingItem as CategoryItem)}>
+                		Delete Item
+                	</button>
+                </div>
 		</div>
 	{/if}
 </Modal>

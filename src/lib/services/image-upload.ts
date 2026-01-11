@@ -1,4 +1,5 @@
 import { supabase } from '$lib/supabase/client';
+import { error as logError } from '$lib/utils/logger';
 
 const BUCKET_NAME = 'category-covers';
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -53,7 +54,6 @@ function generateFilePath(userId: string, itemId: string, fileName: string): str
  */
 export async function uploadImage(
     file: File,
-    categoryId: string,
     itemId: string
 ): Promise<UploadResult> {
     // Validate file
@@ -72,7 +72,7 @@ export async function uploadImage(
         throw new Error('You must be logged in to upload images');
     }
 
-    // Generate file path
+    // Generate file path (categoryId is not required for storage path)
     const filePath = generateFilePath(user.id, itemId, file.name);
 
     // Upload to Supabase Storage
@@ -84,7 +84,7 @@ export async function uploadImage(
         });
 
     if (error) {
-        console.error('Upload error:', error);
+        logError('Upload error:', error);
         throw new Error(`Failed to upload image: ${error.message}`);
     }
 
@@ -111,7 +111,7 @@ export async function deleteImage(path: string): Promise<void> {
     const { error } = await supabase.storage.from(BUCKET_NAME).remove([path]);
 
     if (error) {
-        console.error('Delete error:', error);
+        logError('Delete error:', error);
         throw new Error(`Failed to delete image: ${error.message}`);
     }
 }
@@ -152,11 +152,11 @@ export async function updateImage(
         try {
             await deleteImage(oldPath);
         } catch (error) {
-            console.warn('Failed to delete old image:', error);
+            logError('Failed to delete old image:', error);
             // Continue with upload even if delete fails
         }
     }
 
     // Upload new image
-    return uploadImage(newFile, categoryId, itemId);
+    return uploadImage(newFile, itemId);
 }

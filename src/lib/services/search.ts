@@ -1,4 +1,5 @@
 import { supabase } from '$lib/supabase/client';
+import { error as logError } from '$lib/utils/logger';
 import { getUserCategories } from './categories';
 import type { SearchFilters, SearchResult, SearchResponse, SearchSuggestion } from '$lib/types/search';
 import type { CategoryItem, Category } from '$lib/types/category';
@@ -32,7 +33,7 @@ export function saveRecentSearch(query: string): void {
         const updated = [query, ...recent.filter(q => q !== query)].slice(0, MAX_RECENT_SEARCHES);
         localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
     } catch (error) {
-        console.error('Failed to save recent search:', error);
+        logError('Failed to save recent search:', error);
     }
 }
 
@@ -96,7 +97,7 @@ export async function globalSearch(
         const { data: items, error } = await supabaseQuery;
 
         if (error) {
-            console.error('Search error:', error);
+            logError('Search error:', error);
             throw error;
         }
 
@@ -208,7 +209,7 @@ export async function globalSearch(
             filters
         };
     } catch (error) {
-        console.error('Global search error:', error);
+        logError('Global search error:', error);
         throw error;
     }
 }

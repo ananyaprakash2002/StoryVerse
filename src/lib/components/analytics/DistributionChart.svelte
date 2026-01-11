@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Chart, ArcElement, DoughnutController, Tooltip, Legend, type ChartConfiguration } from 'chart.js';
+	import { error as logError } from '$lib/utils/logger';
 	import type { CategoryDistribution } from '$lib/services/analytics';
 	import { goto } from '$app/navigation';
 
@@ -109,9 +110,17 @@
 											const category = data[i];
 											const percentage = category.percentage.toFixed(1);
 
+											// Safely extract background color (could be string or array)
+											let fillStyle = '';
+											if (Array.isArray(dataset.backgroundColor)) {
+												fillStyle = (dataset.backgroundColor as any[])[i] as string;
+											} else if (typeof dataset.backgroundColor === 'string') {
+												fillStyle = dataset.backgroundColor as string;
+											}
+
 											return {
 												text: `${label} (${value}) ${percentage}%`,
-												fillStyle: dataset.backgroundColor?.[i] as string,
+												fillStyle,
 												fontColor: document.documentElement.getAttribute('data-theme') !== 'light' ? '#f9fafb' : '#24292f',
 												hidden: false,
 												index: i
@@ -141,7 +150,7 @@
 
 			chart = new Chart(canvasElement, config);
 		} catch (error) {
-			console.error('Error creating chart:', error);
+			logError('Error creating chart:', error);
 		}
 	});
 </script>

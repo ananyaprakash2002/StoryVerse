@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { getAllAnalytics, type AnalyticsData } from '$lib/services/analytics';
+	import { error as logError } from '$lib/utils/logger';
 	import Loader from '$lib/components/common/Loader.svelte';
 	import Button from '$lib/components/common/Button.svelte';
 	import TimeSeriesChart from '$lib/components/analytics/TimeSeriesChart.svelte';
@@ -21,7 +22,7 @@
 		try {
 			analytics = await getAllAnalytics(selectedPeriod);
 		} catch (err) {
-			console.error('Failed to load analytics:', err);
+			logError('Failed to load analytics:', err);
 		} finally {
 			loading = false;
 		}

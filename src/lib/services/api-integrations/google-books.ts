@@ -1,4 +1,5 @@
 import type { GoogleBooksSearchResponse, GoogleBooksVolume, BookData, APIError } from '$lib/types/api';
+import { error as logError } from '$lib/utils/logger';
 
 const GOOGLE_BOOKS_API_BASE = 'https://www.googleapis.com/books/v1';
 
@@ -108,9 +109,9 @@ export async function searchBooks(query: string, maxResults: number = 10): Promi
 
         return books;
     } catch (error) {
-        console.error('Google Books API search error:', error);
-        console.error('API Key present:', !!getApiKey());
-        console.error('Query:', query);
+        logError('Google Books API search error:', error);
+        logError('API Key present:', !!getApiKey());
+        logError('Query:', query);
 
         // Better error message based on error type
         let errorMessage = 'Failed to search books. ';
@@ -161,7 +162,7 @@ export async function getBookDetails(id: string): Promise<BookData> {
         setCache(cacheKey, book);
         return book;
     } catch (error) {
-        console.error('Google Books API details error:', error);
+        logError('Google Books API details error:', error);
         throw {
             message: 'Failed to get book details. Please try again.',
             details: error

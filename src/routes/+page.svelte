@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { error as logError } from '$lib/utils/logger';
 	import { goto } from '$app/navigation';
 	import { getUserCategories, getCategoryStats } from '$lib/services/categories';
 	import { getItems } from '$lib/services/category-items';
@@ -64,7 +65,7 @@
 				.sort((a, b) => new Date(b.item.created_at).getTime() - new Date(a.item.created_at).getTime())
 				.slice(0, 10);
 		} catch (err) {
-			console.error('Failed to load dashboard:', err);
+			logError('Failed to load dashboard:', err);
 		} finally {
 			loading = false;
 		}

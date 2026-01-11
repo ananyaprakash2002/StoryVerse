@@ -1,57 +1,71 @@
-# StoryVerse - Media Tracker
+# StoryVerse - Personal Media Tracker
 
-A beautiful, modern web application for tracking your books, manga, anime, and movies. Built with SvelteKit and Supabase, deployed on Vercel for free.
+A beautiful, modern web application for tracking your books, manga, anime, movies, and any custom media categories. Built with SvelteKit and Supabase.
 
 ## ✨ Features
 
-- 📚 **Books**: Track title, author, reading progress, and completion status
-- 📖 **Manga**: Monitor chapters, completion status, and website links
-- 🎬 **Anime**: Keep tabs on episodes, seasons, and streaming links
-- 🎥 **Movies**: Log watched movies with dates
-- 📊 **Dashboard**: View statistics and recent activity across all media
+### Custom Categories
+- 📚 **Templates**: Pre-built templates for Books, Movies, Anime, and Manga
+- 🎨 **Fully Customizable**: Create your own categories with custom fields, icons, and colors
+- 📋 **Flexible Fields**: Support for text, numbers, dates, ratings, tags, URLs, and more
+
+### Dashboard & Analytics
+- 📊 **Analytics Dashboard**: View statistics, trends, and insights across all your media
+- 📈 **Time Series Charts**: Track your activity over time (7d, 30d, 90d, 1y)
+- 🏆 **Category Distribution**: See how your collection is distributed
+- ⭐ **Rating Analysis**: Visualize your rating patterns
+
+### Search & Discovery
+- 🔍 **Global Search**: Search across all categories with instant results
+- 🏷️ **Filter & Sort**: Filter by category, status, rating, and more
+- 📜 **Recent Searches**: Quick access to your search history
+
+### User Experience
+- 🌙 **Dark/Light Theme**: Toggle between themes with system preference detection
+- 📱 **Responsive Design**: Works beautifully on desktop, tablet, and mobile
+- ✨ **Modern UI**: Glassmorphism effects and smooth animations
+- 🖼️ **Cover Images**: Add cover images to your tracked items
+
+### Security
 - 🔐 **Authentication**: Secure user accounts with Supabase Auth
-- 📱 **Responsive**: Works beautifully on desktop, tablet, and mobile
-- 🎨 **Modern UI**: Dark theme with glassmorphism and smooth animations
+- 🛡️ **Row Level Security**: Users can only access their own data
+- 👤 **User Profiles**: Customizable usernames
 
 ## 🚀 Tech Stack
 
-- **Frontend**: SvelteKit + TypeScript
-- **Backend**: Supabase (PostgreSQL + Auth + Auto-generated API)
+- **Frontend**: SvelteKit 2 + TypeScript + Svelte 5
+- **Backend**: Supabase (PostgreSQL + Auth + RLS)
+- **Charts**: Chart.js
 - **Styling**: Custom CSS with design tokens
-- **Hosting**: Vercel (free tier)
-- **Database**: Supabase PostgreSQL (free tier)
+- **Hosting**: Vercel
 
 ## 📋 Prerequisites
 
 - Node.js 18+ and npm
 - A Supabase account (free at [supabase.com](https://supabase.com))
-- A Vercel account (free at [vercel.com](https://vercel.com))
+- A Vercel account for deployment (free at [vercel.com](https://vercel.com))
 
-## 🛠️ Setup Instructions
+## 🛠️ Quick Start
 
-### 1. Clone and Install Dependencies
+### 1. Clone and Install
 
 ```bash
-cd /Users/ananyaprakash/Repos/StoryVerse
+git clone https://github.com/YOUR_USERNAME/StoryVerse.git
+cd StoryVerse
 npm install
 ```
 
 ### 2. Set Up Supabase
 
-1. Go to [supabase.com](https://supabase.com) and create a new project
-2. Once your project is ready, go to **Project Settings** → **API**
-3. Copy your **Project URL** and **anon/public** key
-4. In the Supabase dashboard, go to the **SQL Editor**
-5. Run the SQL commands from `SUPABASE_SETUP.md` to create tables and policies
+See [docs/SETUP.md](docs/SETUP.md) for detailed Supabase configuration and database migrations.
 
-### 3. Configure Environment Variables
+### 3. Configure Environment
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and add your Supabase credentials:
-
+Edit `.env` with your Supabase credentials:
 ```
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
@@ -63,89 +77,56 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Open [http://localhost:5173](http://localhost:5173)
 
 ## 📁 Project Structure
 
 ```
 src/
-├── routes/              # Pages (SvelteKit file-based routing)
-│   ├── +layout.svelte   # Root layout with auth guard
+├── routes/              # SvelteKit file-based routing
 │   ├── +page.svelte     # Dashboard
-│   ├── login/           # Authentication page
-│   ├── books/           # Books management
-│   ├── manga/           # Manga management
-│   ├── anime/           # Anime management
-│   └── movies/          # Movies management
+│   ├── analytics/       # Analytics dashboard
+│   ├── categories/      # Category management
+│   ├── search/          # Global search
+│   └── login/           # Authentication
 ├── lib/
 │   ├── components/      # Reusable UI components
+│   │   ├── analytics/   # Charts and insights
+│   │   ├── category/    # Category-related UI
+│   │   ├── common/      # Buttons, inputs, modals
+│   │   └── layout/      # Navigation, sidebar
 │   ├── services/        # API/database layer
-│   ├── stores/          # Global state management
-│   ├── types/           # TypeScript type definitions
-│   ├── supabase/        # Supabase client configuration
+│   ├── stores/          # Global state (theme, UI, user)
+│   ├── types/           # TypeScript definitions
 │   └── utils/           # Utility functions
 └── app.css              # Global styles and design tokens
 ```
 
-## 🚢 Deployment to Vercel
+## 🚢 Deployment
 
-### Option 1: One-Click Deploy
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Vercel deployment instructions.
 
-1. Push your code to GitHub
-2. Go to [vercel.com](https://vercel.com) and import your repository
-3. Add environment variables in Vercel dashboard:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-4. Deploy!
+## 📝 Database Migrations
 
-### Option 2: Command Line
+Run migrations in order from [docs/migrations/](docs/migrations/):
 
-```bash
-npm install -g vercel
-vercel
-```
-
-Follow the prompts and add your environment variables when asked.
-
-## 🔒 Security
-
-- **Row Level Security (RLS)**: All database tables have RLS policies ensuring users can only access their own data
-- **Authentication**: Handled by Supabase Auth with secure session management
-- **API Keys**: Never exposed in client code; only public anon key is used (which is safe with RLS)
-
-## 📝 Usage
-
-1. **Sign Up**: Create an account on the login page
-2. **Add Media**: Navigate to any section (Books, Manga, Anime, Movies) and click "Add New"
-3. **Track Progress**: Update progress, mark items as completed
-4. **View Dashboard**: See your overall statistics and recent activity
+1. `001_initial_schema.sql` - Core tables
+2. `002_custom_categories.sql` - Custom categories
+3. `003_user_profiles.sql` - User profiles
+4. `004_cover_images.sql` - Cover image support
+5. `005_search_optimization.sql` - Full-text search
 
 ## 🎨 Customization
 
-The design system is defined in `src/app.css` using CSS custom properties. You can easily customize:
-
-- Colors (theme, accents)
+Design tokens are defined in `src/app.css`. Customize:
+- Colors and themes
 - Typography
-- Spacing
-- Border radius
+- Spacing and layout
 - Shadows and effects
 
 ## 📄 License
 
-MIT License - feel free to use this project however you'd like!
-
-## 🤝 Contributing
-
-This is a personal project, but feel free to fork and adapt it for your needs!
-
-## 💡 Future Enhancements
-
-- [ ] Search and filter functionality
-- [ ] Export data to CSV/JSON
-- [ ] Dark/light theme toggle
-- [ ] Integration with external APIs (MyAnimeList, Goodreads, etc.)
-- [ ] Statistics and analytics visualizations
-- [ ] Tags and custom categories
+MIT License
 
 ---
 

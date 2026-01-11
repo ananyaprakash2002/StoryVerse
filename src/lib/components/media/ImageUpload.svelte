@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { uploadImage, deleteImage } from '$lib/services/image-upload';
+	import { error as logError } from '$lib/utils/logger';
 	import Button from '$lib/components/common/Button.svelte';
 	import Loader from '$lib/components/common/Loader.svelte';
 
@@ -46,7 +47,7 @@
 			dispatch('upload', result);
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to upload image';
-			console.error('Upload error:', err);
+			logError('Upload error:', err);
 		} finally {
 			uploading = false;
 		}
@@ -65,7 +66,7 @@
 			dispatch('delete');
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to delete image';
-			console.error('Delete error:', err);
+			logError('Delete error:', err);
 		} finally {
 			deleting = false;
 		}
