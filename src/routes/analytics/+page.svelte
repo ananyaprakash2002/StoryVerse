@@ -326,13 +326,7 @@
 		opacity: 0.05;
 	}
 
-	.stat {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-sm);
-		position: relative;
-		z-index: 1;
-	}
+
 
 	.stat-label {
 		font-size: var(--font-size-sm);

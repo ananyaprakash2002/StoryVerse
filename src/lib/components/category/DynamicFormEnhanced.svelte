@@ -107,7 +107,7 @@
 
 	<!-- Cover Image Upload Section -->
 	<div class="image-section">
-		<label class="section-label">Cover Image (Optional)</label>
+		<h4 class="section-label">Cover Image (Optional)</h4>
 		<ImageUpload
 			currentImageUrl={imageData?.url || ''}
 			currentImagePath={imageData?.path || ''}

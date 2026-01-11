@@ -26,7 +26,13 @@
 	{:else}
 		<div class="grid">
 			{#each items as item}
-				<div class="grid-card" onclick={() => onViewDetails(item)} role="button" tabindex="0">
+				<div 
+					class="grid-card" 
+					onclick={() => onViewDetails(item)}
+					onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && onViewDetails(item)}
+					role="button" 
+					tabindex="0"
+				>
 					<!-- Cover Image -->
 					{#if item.cover_image_url}
 						<div class="card-cover">
@@ -75,7 +81,12 @@
 						{/if}
 
 						<!-- Actions -->
-						<div class="card-actions" onclick={(e) => e.stopPropagation()}>
+						<div 
+							class="card-actions" 
+							onclick={(e) => e.stopPropagation()}
+							onkeydown={(e) => e.stopPropagation()}
+							role="group"
+						>
 							<Button variant="secondary" size="sm" onClick={() => onEdit(item)}>
 								Edit
 							</Button>
@@ -159,6 +170,7 @@
 		margin: 0;
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
+		line-clamp: 2;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
 	}

@@ -16,7 +16,7 @@
 
 	let { data, title = 'Category Distribution', clickable = true }: Props = $props();
 
-	let canvasElement: HTMLCanvasElement;
+	let canvasElement = $state<HTMLCanvasElement>();
 	let chart: Chart | null = null;
 	let mounted = $state(false);
 	let currentTheme = $state('dark');

@@ -73,7 +73,7 @@
 			required={field.required}
 			{disabled}
 			rows="4"
-		/>
+		></textarea>
 	{:else if field.field_type === 'number'}
 		<input
 			type="number"
