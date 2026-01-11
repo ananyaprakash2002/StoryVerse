@@ -192,3 +192,40 @@ export async function getCategoryStats(categoryId: string) {
         total_items: count || 0
     };
 }
+
+/**
+ * Update category with new fields (replaces all fields)
+ */
+export async function updateCategoryWithFields(
+    categoryId: string,
+    updates: CategoryUpdate,
+    newFields?: any[]
+): Promise<Category> {
+    // Update category basic info
+    const updatedCategory = await updateCategory(categoryId, updates);
+
+    // If fields are provided, replace them
+    if (newFields) {
+        // Delete existing fields
+        await supabase
+            .from('category_fields')
+            .delete()
+            .eq('category_id', categoryId);
+
+        // Insert new fields
+        if (newFields.length > 0) {
+            const fieldsToInsert = newFields.map((field, index) => ({
+                category_id: categoryId,
+                ...field,
+                order_index: field.order_index ?? index
+            }));
+
+            await supabase
+                .from('category_fields')
+                .insert(fieldsToInsert);
+        }
+    }
+
+    // Return updated category with fields
+    return getCategory(categoryId);
+}

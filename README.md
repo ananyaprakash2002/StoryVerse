@@ -8,23 +8,38 @@ A beautiful, modern web application for tracking your books, manga, anime, movie
 - 📚 **Templates**: Pre-built templates for Books, Movies, Anime, and Manga
 - 🎨 **Fully Customizable**: Create your own categories with custom fields, icons, and colors
 - 📋 **Flexible Fields**: Support for text, numbers, dates, ratings, tags, URLs, and more
+- ✏️ **Live Field Editing**: Edit category fields on-the-fly with real-time updates
+- 🔄 **Field Reordering**: Drag and reorder fields to customize your layout
 
 ### Dashboard & Analytics
-- 📊 **Analytics Dashboard**: View statistics, trends, and insights across all your media
-- 📈 **Time Series Charts**: Track your activity over time (7d, 30d, 90d, 1y)
-- 🏆 **Category Distribution**: See how your collection is distributed
-- ⭐ **Rating Analysis**: Visualize your rating patterns
+- 📊 **Enhanced Analytics Dashboard**: Beautiful, animated statistics and insights
+- 📈 **Time Series Charts**: Track activity over time (7d, 30d, 90d, 1y) with gradient styling
+- 🏆 **Category Distribution**: Visual breakdown of your collection with animated pie charts
+- ⭐ **Rating Analysis**: Detailed rating patterns with bar charts
+- 🎬 **Animated Counters**: Smooth, eye-catching number animations for key metrics
+- 🎨 **Gradient Stats Cards**: Premium glassmorphism design with glow effects
+- 🔄 **Staggered Animations**: Polished fade-in effects for better UX
 
-### Search & Discovery
-- 🔍 **Global Search**: Search across all categories with instant results
-- 🏷️ **Filter & Sort**: Filter by category, status, rating, and more
-- 📜 **Recent Searches**: Quick access to your search history
+### Data Management
+- 💾 **Export Options**: Export your data to JSON (backup), Excel, or PDF formats
+- 📤 **Import from JSON**: Bulk import items from previously exported data
+- 🔍 **Advanced Search**: Search across all fields with instant filtering
+- 🏷️ **Column Filters**: Filter individual columns for precise data discovery
+- ✅ **Bulk Actions**: Select and delete multiple items at once
+- 🔀 **Sorting**: Sort by any field in ascending or descending order
+
+### Viewing Modes
+- 📋 **Table View**: Traditional spreadsheet-style view with sortable columns
+- 🎴 **Grid View**: Card-based visual layout perfect for media with cover images
+- 👁️ **Column Visibility**: Show/hide specific columns to customize your view
+- 💾 **View Persistence**: Your preferred view mode is saved per category
 
 ### User Experience
-- 🌙 **Dark/Light Theme**: Toggle between themes with system preference detection
+- 🌙 **Dark/Light Theme**: Toggle between themes with system preference detection and chart re-rendering
 - 📱 **Responsive Design**: Works beautifully on desktop, tablet, and mobile
-- ✨ **Modern UI**: Glassmorphism effects and smooth animations
-- 🖼️ **Cover Images**: Add cover images to your tracked items
+- ✨ **Modern UI**: Premium glassmorphism effects and smooth micro-animations
+- 🖼️ **Cover Images**: Add cover images to your tracked items with Google Books integration
+- 🎯 **Keyboard Accessible**: Full keyboard navigation support for better accessibility
 
 ### Security
 - 🔐 **Authentication**: Secure user accounts with Supabase Auth
@@ -86,20 +101,32 @@ Open [http://localhost:5173](http://localhost:5173)
 src/
 ├── routes/              # SvelteKit file-based routing
 │   ├── +page.svelte     # Dashboard
-│   ├── analytics/       # Analytics dashboard
+│   ├── analytics/       # Analytics dashboard with animated charts
 │   ├── categories/      # Category management
+│   │   ├── [id]/        # Category detail with grid/table views
+│   │   └── new/         # Create new category
 │   ├── search/          # Global search
 │   └── login/           # Authentication
 ├── lib/
 │   ├── components/      # Reusable UI components
 │   │   ├── analytics/   # Charts and insights
 │   │   ├── category/    # Category-related UI
+│   │   │   ├── GridView.svelte        # Card-based grid layout
+│   │   │   ├── ViewToggle.svelte      # Switch between table/grid
+│   │   │   ├── FieldEditor.svelte     # Edit category fields
+│   │   │   ├── DynamicForm.svelte     # Dynamic form builder
+│   │   │   └── FieldBuilder.svelte    # Field configuration
+│   │   ├── collections/ # Collection management (planned)
+│   │   ├── notes/       # Notes feature (planned)
 │   │   ├── common/      # Buttons, inputs, modals
-│   │   └── layout/      # Navigation, sidebar
+│   │   ├── dashboard/   # Dashboard widgets
+│   │   ├── layout/      # Navigation, sidebar
+│   │   └── media/       # Media-related components
 │   ├── services/        # API/database layer
 │   ├── stores/          # Global state (theme, UI, user)
 │   ├── types/           # TypeScript definitions
 │   └── utils/           # Utility functions
+│       └── export-utils.ts  # Export/import helpers
 └── app.css              # Global styles and design tokens
 ```
 

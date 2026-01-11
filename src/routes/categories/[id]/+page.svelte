@@ -10,17 +10,18 @@
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Loader from '$lib/components/common/Loader.svelte';
 	import DynamicFormEnhanced from '$lib/components/category/DynamicFormEnhanced.svelte';
-	import CoverImage from '$lib/components/media/CoverImage.svelte';
+
 	import GridView from '$lib/components/category/GridView.svelte';
 	import ViewToggle from '$lib/components/category/ViewToggle.svelte';
+	import FieldEditor from '$lib/components/category/FieldEditor.svelte';
+	import { exportToJSON, exportToExcel, exportToPDF, parseImportedJSON } from '$lib/utils/export-utils';
+	import { updateCategoryWithFields } from '$lib/services/categories';
 
 	let category: Category | null = null;
 	let items: CategoryItem[] = [];
 	let loading = true;
 	let showModal = false;
-	let showDetailsModal = false;
 	let editingItem: CategoryItem | null = null;
-	let viewingItem: CategoryItem | null = null;
 	let formValues: Record<string, any> = {};
 	let saving = false;
 
@@ -32,7 +33,23 @@
 	let columnFilters: Record<string, string> = {};
 	let selectedItems = new Set<string>();
 	let visibleColumns = new Set<string>();
-	let viewMode: 'table' | 'grid' = 'table';
+	let viewMode: 'table' | 'grid' = 'grid';
+	
+	// Export/Import
+	let showExportMenu = false;
+	let importing = false;
+
+	// Edit Category
+	let showEditCategoryModal = false;
+	let isEditingCategoryPage = false;
+	let categoryFormData = {
+		name: '',
+		icon: '',
+		color: '',
+		description: '',
+		fields: [] as any[]
+	};
+	let savingCategory = false;
 
 	let categoryId: string = '';
 	$: categoryId = $page.params.id ?? '';
@@ -40,13 +57,6 @@
 	onMount(() => {
 		// Use inner async function to avoid returning a Promise from onMount
 	 	const init = async () => {
-	 		// Load view preference from localStorage
-	 		const saved = localStorage.getItem(`viewMode_${categoryId}`);
-	 		if (saved === 'table' || saved === 'grid') {
-	 			viewMode = saved;
-	 			console.log('Loaded saved view mode:', saved);
-	 		}
-
 	 		await loadData();
 	 	};
 
@@ -57,6 +67,7 @@
 	 		const target = e.target as HTMLElement | null;
 	 		if (!target || !target.closest('.dropdown')) {
 	 			showColumnDropdown = false;
+				showExportMenu = false;
 	 		}
 	 	};
 	 	document.addEventListener('click', handleClickOutside);
@@ -226,8 +237,7 @@
 	}
 
 	function viewItemDetails(item: CategoryItem) {
-		viewingItem = item;
-		showDetailsModal = true;
+		goto(`/categories/${categoryId}/items/${item.id}`);
 	}
 
 	function openAddModal() {
@@ -240,19 +250,18 @@
 		editingItem = item;
 		formValues = { ...item.data };
 		showModal = true;
-		showDetailsModal = false;
 	}
 
 	async function handleSubmit(data: Record<string, any>, imageData?: { url: string; path: string; apiSource?: string; apiId?: string }) {
 		saving = true;
 		try {
-			const itemData: CategoryItemInput = {
-				data,
-				cover_image_url: imageData?.url || '',
-				cover_image_path: imageData?.path || '',
-				api_source: imageData?.apiSource === 'google_books' ? 'google_books' : null,
-				api_id: imageData?.apiId || ''
-			};
+					const itemData: CategoryItemInput = {
+						data,
+						cover_image_url: imageData?.url ?? (editingItem?.cover_image_url || ''),
+						cover_image_path: imageData?.path ?? (editingItem?.cover_image_path || ''),
+						api_source: imageData?.apiSource === 'google_books' ? 'google_books' : (editingItem?.api_source ?? null),
+						api_id: imageData?.apiId ?? (editingItem?.api_id || '')
+					};
 
 			if (editingItem) {
 				await updateItem(editingItem.id, itemData);
@@ -276,7 +285,6 @@
 		try {
 			await deleteItem(item.id);
 			toasts.success('Item deleted!');
-			showDetailsModal = false;
 			await loadData();
 		} catch (err: any) {
 			toasts.error(err.message || 'Failed to delete item');
@@ -300,8 +308,215 @@
 		}
 	}
 
+	// --- Edit Category helpers ---
+	function openEditCategoryModal() {
+		if (!category) return;
+		// Deep copy category data into form
+		categoryFormData = {
+			name: category.name || '',
+			icon: category.icon || '',
+			color: category.color || '',
+			description: category.description || '',
+			fields: (category.fields || []).map((f) => ({ ...f }))
+		};
+		isEditingCategoryPage = true;
+		// scroll to top for the in-page editor
+		setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+	}
+
+	function addNewField() {
+		const newField = {
+			id: `new_${Date.now()}`,
+			name: `field_${Date.now()}`,
+			label: 'New Field',
+			field_type: 'text',
+			placeholder: '',
+			options: [],
+			required: false,
+			order_index: categoryFormData.fields.length
+		};
+
+		categoryFormData.fields = [...categoryFormData.fields, newField];
+
+		// Scroll to new field
+		setTimeout(() => {
+			const last = document.querySelector('.field-editor:last-child') as HTMLElement | null;
+			last?.scrollIntoView({ behavior: 'smooth' });
+		}, 100);
+	}
+
+	function confirmDeleteField(index: number) {
+		const field = categoryFormData.fields[index];
+		
+		// If items exist, show strong warning about data loss
+		if (items.length > 0) {
+			const confirmed = confirm(
+				`⚠️ WARNING: Delete field "${field.label}"?\n\n` +
+				`This category has ${items.length} item(s).\n` +
+				`All data in this field will be PERMANENTLY DELETED from all items!\n\n` +
+				`This action CANNOT be undone.\n\n` +
+				`Are you sure you want to continue?`
+			);
+			
+			if (!confirmed) return;
+		} else {
+			// No items, just confirm normally
+			if (!confirm(`Delete field "${field.label}"?\n\nThis action cannot be undone.`)) return;
+		}
+		
+		// Delete the field
+		const newFields = [...categoryFormData.fields];
+		newFields.splice(index, 1);
+		// Re-index order_index
+		categoryFormData.fields = newFields.map((f, i) => ({ ...f, order_index: i }));
+		
+		if (items.length > 0) {
+			toasts.success(`Field "${field.label}" will be deleted when you save changes`);
+		}
+	}
+
+	function updateField(index: number, updated: any) {
+		const fields = [...categoryFormData.fields];
+		fields[index] = { ...fields[index], ...updated };
+		categoryFormData.fields = fields;
+	}
+
+	function moveField(index: number, direction: number) {
+		const newIndex = index + direction;
+		if (newIndex < 0 || newIndex >= categoryFormData.fields.length) return;
+		const fields = [...categoryFormData.fields];
+		[fields[index], fields[newIndex]] = [fields[newIndex], fields[index]];
+		categoryFormData.fields = fields.map((f, i) => ({ ...f, order_index: i }));
+	}
+
+	async function handleSaveCategoryChanges() {
+		if (!category) return;
+		// Basic validation
+		if (!categoryFormData.name || !categoryFormData.name.trim()) {
+			toasts.error('Category name is required');
+			return;
+		}
+
+		// Unique field names
+		const names = categoryFormData.fields.map((f) => f.name);
+		if (new Set(names).size !== names.length) {
+			toasts.error('Field names must be unique');
+			return;
+		}
+
+		savingCategory = true;
+		try {
+			// Prepare fields for DB: remove transient props
+			const fieldsToSave = categoryFormData.fields.map((f, i) => ({
+				name: f.name,
+				label: f.label,
+				field_type: f.field_type,
+				placeholder: f.placeholder ?? null,
+				options: f.options ?? null,
+				required: !!f.required,
+				order_index: f.order_index ?? i
+			}));
+
+			const updated = await updateCategoryWithFields(categoryId, {
+				name: categoryFormData.name,
+				icon: categoryFormData.icon,
+				color: categoryFormData.color,
+				description: categoryFormData.description
+			}, fieldsToSave);
+
+			category = updated;
+			await loadData(); // reload items and fields
+			toasts.success('Category updated successfully!');
+			isEditingCategoryPage = false; // Just close edit mode, stay on page
+		} catch (err: any) {
+			toasts.error(err?.message || 'Failed to update category');
+		} finally {
+			savingCategory = false;
+		}
+	}
+
 	function formatDate(dateString: string) {
 		return new Date(dateString).toLocaleString();
+	}
+
+	// Export handlers
+	function handleExportJSON() {
+		if (!category || items.length === 0) {
+			toasts.error('No items to export');
+			return;
+		}
+		exportToJSON(items, category.name);
+		toasts.success(`Exported ${items.length} items as JSON`);
+		showExportMenu = false;
+	}
+
+	function handleExportExcel() {
+		if (!category || items.length === 0) {
+			toasts.error('No items to export');
+			return;
+		}
+		exportToExcel(items, category.fields || [], category.name);
+		toasts.success(`Exported ${items.length} items as Excel`);
+		showExportMenu = false;
+	}
+
+	function handleExportPDF() {
+		if (!category || items.length === 0) {
+			toasts.error('No items to export');
+			return;
+		}
+		exportToPDF(items, category.fields || [], category.name);
+		toasts.success(`Exported ${items.length} items as PDF`);
+		showExportMenu = false;
+	}
+
+	// Import handler
+	async function handleImport(event: Event) {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0];
+		
+		if (!file) return;
+
+		importing = true;
+		try {
+			const { items: importedItems, category: importCategory, itemCount } = await parseImportedJSON(file);
+
+			// Confirm import
+			if (!confirm(`Import ${itemCount} items from "${importCategory}"?\n\nThis will add to your existing ${items.length} items.`)) {
+				input.value = '';
+				importing = false;
+				return;
+			}
+
+			// Create items
+			let successCount = 0;
+			let errorCount = 0;
+
+			for (const itemData of importedItems) {
+				try {
+					await createItem(categoryId, itemData);
+					successCount++;
+				} catch (err) {
+					errorCount++;
+					console.error('Failed to import item:', err);
+				}
+			}
+
+			// Show result
+			if (successCount > 0) {
+				toasts.success(`Successfully imported ${successCount} items!`);
+				await loadData();
+			}
+			if (errorCount > 0) {
+				toasts.error(`Failed to import ${errorCount} items`);
+			}
+		} catch (err: any) {
+			toasts.error('Import failed: ' + (err.message || 'Invalid file format'));
+		} finally {
+			input.value = ''; // Reset file input
+			importing = false;
+			showExportMenu = false;
+		}
 	}
 
 	$: hasActiveFilters = searchQuery || Object.values(columnFilters).some((v) => v);
@@ -343,12 +558,134 @@
 			</div>
 			<div class="header-actions">
 				<Button variant="primary" onClick={openAddModal}>+ Add Item</Button>
+				<Button variant="secondary" onClick={openEditCategoryModal}>✏️ Edit Category</Button>
 				<button class="btn btn-danger" on:click={handleDeleteCategory}>
 					Delete Category
 				</button>
+				
+				<!-- Export/Import Menu -->
+				<div class="export-menu dropdown" class:show={showExportMenu}>
+					<button 
+						class="btn btn-secondary export-btn"
+						on:click={() => showExportMenu = !showExportMenu}
+					>
+						📥 Export/Import
+						<span class="dropdown-arrow">▼</span>
+					</button>
+					
+					{#if showExportMenu}
+						<div class="dropdown-content">
+							<div class="dropdown-section">
+								<div class="dropdown-label">Export</div>
+								<button class="dropdown-item" on:click={handleExportJSON}>
+									<span class="item-icon">💾</span>
+									<span>JSON (Backup)</span>
+								</button>
+								<button class="dropdown-item" on:click={handleExportExcel}>
+									<span class="item-icon">📊</span>
+									<span>Excel Spreadsheet</span>
+								</button>
+								<button class="dropdown-item" on:click={handleExportPDF}>
+									<span class="item-icon">📄</span>
+									<span>PDF Document</span>
+								</button>
+							</div>
+							
+							<div class="dropdown-divider"></div>
+							
+							<div class="dropdown-section">
+								<div class="dropdown-label">Import</div>
+								<label class="dropdown-item import-item">
+									<span class="item-icon">📤</span>
+									<span>{importing ? 'Importing...' : 'Import from JSON'}</span>
+									<input 
+										type="file" 
+										accept=".json" 
+										on:change={handleImport}
+										disabled={importing}
+										style="display: none;"
+									/>
+								</label>
+							</div>
+						</div>
+					{/if}
+				</div>
 			</div>
 		</div>
 
+		{#if isEditingCategoryPage}
+			<!-- In-place Edit Category -->
+			{#if category}
+				<div class="edit-page">
+					<div class="edit-page-header">
+						<button class="btn btn-ghost" on:click={() => (isEditingCategoryPage = false)}>← Back</button>
+						<div class="breadcrumb">
+							<a class="crumb" href="/categories">Categories</a>
+							<span class="crumb-sep">/</span>
+							<span class="crumb-current">{category.name}</span>
+							<span class="crumb-sep">/</span>
+							<span class="crumb-current muted">Edit</span>
+						</div>
+					</div>
+					<div class="edit-category-form full-bleed">
+						<!-- Section 1: Basic Info -->
+						<div class="section">
+							<h3>Category Details</h3>
+							<div class="form-grid">
+								<div class="form-group">
+									<label for="edit-cat-name">Name</label>
+									<input id="edit-cat-name" type="text" class="input" bind:value={categoryFormData.name} />
+								</div>
+								<div class="form-group">
+									<label for="edit-cat-icon">Icon</label>
+									<input id="edit-cat-icon" type="text" class="input" bind:value={categoryFormData.icon} placeholder="📁" />
+								</div>
+								<div class="form-group">
+									<label for="edit-cat-color">Color</label>
+									<input id="edit-cat-color" type="color" class="input" bind:value={categoryFormData.color} />
+								</div>
+								<div class="form-group full">
+									<label for="edit-cat-desc">Description</label>
+									<textarea id="edit-cat-desc" class="input" bind:value={categoryFormData.description} rows="3"></textarea>
+								</div>
+							</div>
+						</div>
+
+						<!-- Section 2: Field Management -->
+						<div class="section">
+							<h3>Fields</h3>
+							<div class="fields-list">
+								{#each categoryFormData.fields as field, idx}
+									<FieldEditor
+										field={field}
+										index={idx}
+										canReorder={true}
+										isFirst={idx === 0}
+										isLast={idx === categoryFormData.fields.length - 1}
+										on:delete={(e) => confirmDeleteField(e.detail)}
+										on:update={(e) => updateField(idx, e.detail)}
+										on:moveup={(e) => moveField(e.detail, -1)}
+										on:movedown={(e) => moveField(e.detail, 1)}
+									/>
+								{/each}
+							</div>
+							<div class="add-field-row">
+								<Button variant="secondary" onClick={addNewField}>+ Add Field</Button>
+							</div>
+						</div>
+
+						<!-- Actions -->
+						<div class="modal-actions">
+							<Button variant="primary" onClick={handleSaveCategoryChanges} disabled={savingCategory}>Save Changes</Button>
+							<Button variant="secondary" onClick={() => (isEditingCategoryPage = false)}>Cancel</Button>
+						</div>
+					</div>
+				</div>
+			{/if}
+		{/if}
+
+		<!-- Only show items/toolbar when NOT editing category -->
+		{#if !isEditingCategoryPage}
 		<!-- Toolbar with Search, Filters, and Column Visibility -->
 		{#if items.length > 0}
 			<div class="toolbar">
@@ -365,6 +702,7 @@
 						</button>
 					{/if}
 				</div>
+
 
 				<div class="toolbar-right">
 				<ViewToggle currentView={viewMode} on:change={(e) => handleViewChange(e.detail)} />
@@ -529,6 +867,7 @@
 				</table>
 			</div>
 		{/if}
+		{/if} <!-- End !isEditingCategoryPage -->
 	{/if}
 </div>
 
@@ -547,93 +886,8 @@
 	{/if}
 </Modal>
 
-<!-- Item Details Modal -->
-<Modal bind:isOpen={showDetailsModal} title="Item Details">
-	{#if viewingItem && category}
-		<div class="details-view">
-			<!-- Cover Image -->
-			{#if viewingItem.cover_image_url}
-				<div class="details-cover">
-					<CoverImage 
-						imageUrl={viewingItem.cover_image_url} 
-						title={viewingItem.data.title || viewingItem.data.name || 'Item'}
-						size="lg"
-					/>
-				</div>
-			{/if}
 
-			<div class="details-grid">
-				{#each category.fields || [] as field}
-					<div class="detail-card">
-						<div class="detail-label">{field.label}</div>
-						<div class="detail-value">
-							{#if field.field_type === 'boolean'}
-								<span class="badge">{viewingItem.data[field.name] ? '✓ Yes' : '✗ No'}</span>
-							{:else if field.field_type === 'rating'}
-								<div class="rating-display">
-									{#each Array(viewingItem.data[field.name] || 0) as _}
-										<span class="star filled">★</span>
-									{/each}
-									{#each Array(5 - (viewingItem.data[field.name] || 0)) as _}
-										<span class="star">☆</span>
-									{/each}
-								</div>
-							{:else if field.field_type === 'tags' || field.field_type === 'multiselect'}
-								{#if Array.isArray(viewingItem.data[field.name]) && viewingItem.data[field.name].length > 0}
-									<div class="chips">
-										{#each viewingItem.data[field.name] as tag}
-											<span class="chip-large">{tag}</span>
-										{/each}
-									</div>
-								{:else}
-									<span class="text-muted">-</span>
-								{/if}
-							{:else if field.field_type === 'url'}
-								{#if viewingItem.data[field.name]}
-									<a
-										href={viewingItem.data[field.name]}
-										target="_blank"
-										rel="noopener noreferrer"
-										class="url-link-large"
-									>
-										🔗 {viewingItem.data[field.name]}
-									</a>
-								{:else}
-									<span class="text-muted">-</span>
-								{/if}
-							{:else if field.field_type === 'textarea'}
-								<div class="textarea-display">
-									{viewingItem.data[field.name] || '-'}
-								</div>
-							{:else}
-								{viewingItem.data[field.name] || '-'}
-							{/if}
-						</div>
-					</div>
-				{/each}
-			</div>
-
-			<div class="details-meta">
-				<div class="meta-item">
-					<strong>Created:</strong> {formatDate(viewingItem.created_at)}
-				</div>
-				<div class="meta-item">
-					<strong>Updated:</strong> {formatDate(viewingItem.updated_at)}
-				</div>
-			</div>
-
-                <div class="details-actions">
-                	<Button variant="primary" onClick={() => openEditModal(viewingItem as CategoryItem)}>
-                		Edit Item
-                	</Button>
-                	<button class="btn btn-danger" on:click={() => handleDelete(viewingItem as CategoryItem)}>
-                		Delete Item
-                	</button>
-                </div>
-		</div>
-	{/if}
-</Modal>
-
+ 
 <style>
 	.loading-container {
 		display: flex;
@@ -709,14 +963,144 @@
 		gap: var(--space-md);
 	}
 
+	/* Export/Import Menu Styles */
+	.export-menu {
+		position: relative;
+	}
+
+	.export-btn {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	.dropdown-arrow {
+		font-size: 0.7rem;
+		transition: transform 0.2s ease;
+	}
+
+	.export-menu.show .dropdown-arrow {
+		transform: rotate(180deg);
+	}
+
+	.dropdown-content {
+		position: absolute;
+		top: calc(100% + 8px);
+		right: 0;
+		background: var(--bg-secondary);
+		border: 1px solid var(--border-color);
+		border-radius: var(--radius-lg);
+		box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+		min-width: 220px;
+		z-index: 100;
+		animation: slideDown 0.2s ease-out;
+		backdrop-filter: blur(10px);
+	}
+
+	@keyframes slideDown {
+		from {
+			opacity: 0;
+			transform: translateY(-8px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.dropdown-section {
+		padding: var(--space-sm);
+	}
+
+	.dropdown-label {
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--text-muted);
+		padding: var(--space-xs) var(--space-sm);
+		margin-bottom: var(--space-xs);
+	}
+
+	.dropdown-item {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		background: none;
+		border: none;
+		border-radius: var(--radius-md);
+		color: var(--text-primary);
+		font-size: var(--font-size-sm);
+		cursor: pointer;
+		transition: all 0.2s ease;
+		text-align: left;
+	}
+
+	.dropdown-item:hover {
+		background: rgba(96, 165, 250, 0.1);
+		color: var(--primary);
+		transform: translateX(2px);
+	}
+
+	.import-item {
+		cursor: pointer;
+	}
+
+	.import-item:hover {
+		background: rgba(96, 165, 250, 0.1);
+	}
+
+	.item-icon {
+		font-size: 1.1rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 20px;
+	}
+
+	.dropdown-divider {
+		height: 1px;
+		background: var(--border-color);
+		margin: var(--space-xs) var(--space-md);
+	}
+
 
 
 	.clickable-row {
 		cursor: pointer;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		position: relative;
+	}
+
+	.clickable-row::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 0;
+		height: 100%;
+		width: 3px;
+		background: var(--primary);
+		opacity: 0;
+		transition: opacity 0.2s ease;
 	}
 
 	.clickable-row:hover {
-		background: rgba(96, 165, 250, 0.05);
+		background: linear-gradient(to right, rgba(96, 165, 250, 0.08) 0%, rgba(96, 165, 250, 0.02) 100%);
+		transform: scale(1.005);
+	}
+
+	.clickable-row:hover::after {
+		opacity: 1;
+	}
+
+	.clickable-row:nth-child(even) {
+		background: rgba(0, 0, 0, 0.02);
+	}
+
+	.clickable-row:active {
+		transform: scale(1.002);
 	}
 
 	.empty-state {
@@ -795,115 +1179,6 @@
 		border: 1px solid rgba(96, 165, 250, 0.2);
 	}
 
-	/* Details Modal Styles */
-	.details-view {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-lg);
-	}
-
-	.details-cover {
-		display: flex;
-		justify-content: center;
-		padding: var(--space-md);
-		background: var(--bg-secondary);
-		border-radius: var(--radius-md);
-	}
-
-	.details-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-		gap: var(--space-lg);
-	}
-
-	.detail-card {
-		background: var(--bg-secondary);
-		padding: var(--space-lg);
-		border-radius: var(--radius-md);
-		border: 1px solid var(--border-color);
-	}
-
-	.detail-label {
-		font-size: var(--font-size-sm);
-		color: var(--text-muted);
-		margin-bottom: var(--space-sm);
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		font-weight: 600;
-	}
-
-	.detail-value {
-		font-size: var(--font-size-md);
-		color: var(--text-primary);
-		word-break: break-word;
-	}
-
-	.badge {
-		display: inline-block;
-		padding: var(--space-xs) var(--space-sm);
-		background: rgba(96, 165, 250, 0.1);
-		border-radius: var(--radius-sm);
-		font-size: var(--font-size-sm);
-		font-weight: 500;
-	}
-
-	.rating-display {
-		display: flex;
-		gap: var(--space-xs);
-		font-size: 1.5rem;
-	}
-
-	.star.filled {
-		color: var(--warning);
-	}
-
-	.chip-large {
-		display: inline-block;
-		padding: var(--space-sm) var(--space-md);
-		background: rgba(96, 165, 250, 0.1);
-		color: var(--primary);
-		border-radius: var(--radius-md);
-		font-size: var(--font-size-sm);
-		font-weight: 500;
-		border: 1px solid rgba(96, 165, 250, 0.2);
-		margin-right: var(--space-sm);
-		margin-bottom: var(--space-sm);
-	}
-
-	.url-link-large {
-		color: var(--primary);
-		text-decoration: none;
-		word-break: break-all;
-	}
-
-	.url-link-large:hover {
-		text-decoration: underline;
-	}
-
-	.textarea-display {
-		white-space: pre-wrap;
-		line-height: 1.6;
-	}
-
-	.details-meta {
-		display: flex;
-		gap: var(--space-xl);
-		padding: var(--space-lg);
-		background: var(--bg-secondary);
-		border-radius: var(--radius-md);
-		font-size: var(--font-size-sm);
-	}
-
-	.meta-item {
-		color: var(--text-secondary);
-	}
-
-	.details-actions {
-		display: flex;
-		gap: var(--space-md);
-		justify-content: flex-end;
-	}
-
 	@media (max-width: 768px) {
 		.page-header {
 			flex-direction: column;
@@ -922,8 +1197,147 @@
 			max-width: 100%;
 		}
 
-		.details-grid {
-			grid-template-columns: 1fr;
-		}
+	}
+
+	/* Edit Category modal improvements */
+	.edit-category-form {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-lg);
+		padding: var(--space-lg);
+		background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+		border-radius: var(--radius-lg);
+		border: 1px solid var(--border-color);
+		box-shadow: 0 12px 30px rgba(2,6,23,0.6);
+		max-height: 70vh;
+		overflow: auto;
+	}
+
+	.edit-category-form .section h3 {
+		margin: 0 0 var(--space-md) 0;
+		font-size: var(--font-size-lg);
+		color: var(--text-primary);
+		border-bottom: 1px solid var(--border-color);
+		padding-bottom: var(--space-sm);
+	}
+
+	/* In-page editor header */
+	.edit-page {
+		width: 100%;
+		padding: 0 var(--space-lg) var(--space-2xl) var(--space-lg);
+	}
+
+	.edit-page-header {
+		display: flex;
+		align-items: center;
+		gap: var(--space-md);
+		margin-bottom: var(--space-md);
+	}
+
+	.edit-page-header .btn-ghost {
+		background: none;
+		border: 1px solid transparent;
+		color: var(--primary);
+		padding: 6px 10px;
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+	}
+
+	.breadcrumb {
+		display:flex;
+		align-items:center;
+		gap:8px;
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	.breadcrumb .crumb { color: var(--text-muted); text-decoration: none }
+	.breadcrumb .crumb-current { color: var(--text-primary); font-weight: 600 }
+	.breadcrumb .muted { opacity: 0.85 }
+
+	/* full-bleed editor - better alignment */
+	.edit-category-form.full-bleed {
+		background: transparent;
+		border: none;
+		box-shadow: none;
+		padding: 0;
+	}
+
+	.form-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--space-md);
+		align-items: start;
+	}
+
+	.form-group.full { grid-column: 1 / -1; }
+
+	.fields-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		padding: var(--space-md);
+		background: var(--bg-primary);
+		border-radius: var(--radius-md);
+		border: 1px solid var(--border-color);
+	}
+
+	.add-field-row { display:flex; justify-content:flex-start; }
+
+	.modal-actions {
+		display:flex;
+		gap: var(--space-sm);
+		justify-content: flex-end;
+		padding-top: var(--space-sm);
+		border-top: 1px dashed var(--border-color);
+	}
+
+	/* Make inputs and textarea visually consistent and READABLE in dark theme */
+	.edit-category-form .input,
+	.edit-category-form input[type="text"],
+	.edit-category-form input[type="color"],
+	.edit-category-form textarea,
+	.edit-category-form select {
+		background: var(--bg-primary);
+		border: 1px solid var(--border-color);
+		padding: 10px 12px;
+		border-radius: var(--radius-sm);
+		color: var(--text-primary);
+		font-size: var(--font-size-sm);
+		width: 100%;
+		transition: all 0.2s ease;
+	}
+
+	.edit-category-form .input:focus,
+	.edit-category-form input:focus,
+	.edit-category-form textarea:focus,
+	.edit-category-form select:focus {
+		outline: none;
+		border-color: var(--primary);
+		box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+	}
+
+	.edit-category-form .form-group label {
+		display: block;
+		margin-bottom: var(--space-xs);
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+		color: var(--text-primary);
+		text-transform: none;
+	}
+
+	.edit-category-form textarea {
+		resize: vertical;
+		min-height: 80px;
+		font-family: inherit;
+	}
+
+	.edit-category-form input[type="color"] {
+		height: 42px;
+		cursor: pointer;
+	}
+
+	@media (max-width: 900px) {
+		.form-grid { grid-template-columns: 1fr; }
 	}
 </style>

@@ -3,7 +3,12 @@
 	"private": true,
 	"version": "1.0.0",
 	"description": "StoryVerse: personal media tracker using SvelteKit & Supabase",
-	"keywords": ["sveltekit","supabase","media-tracker","storyverse"],
+	"keywords": [
+		"sveltekit",
+		"supabase",
+		"media-tracker",
+		"storyverse"
+	],
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -25,6 +30,9 @@
 	},
 	"dependencies": {
 		"@supabase/supabase-js": "^2.89.0",
-		"chart.js": "^4.5.1"
+		"chart.js": "^4.5.1",
+		"jspdf": "^4.0.0",
+		"jspdf-autotable": "^5.0.7",
+		"xlsx": "^0.18.5"
 	}
 }
