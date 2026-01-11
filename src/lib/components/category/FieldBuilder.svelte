@@ -132,8 +132,9 @@
 					<div class="field-content">
 						<div class="form-row">
 							<div class="form-group">
-								<label class="form-label">Label</label>
+								<label for="field-label-{index}" class="form-label">Label</label>
 								<input
+									id="field-label-{index}"
 									type="text"
 									class="form-input"
 									bind:value={field.label}
@@ -144,8 +145,8 @@
 							</div>
 
 							<div class="form-group">
-								<label class="form-label">Type</label>
-								<select class="form-select" bind:value={field.field_type}>
+								<label for="field-type-{index}" class="form-label">Type</label>
+								<select id="field-type-{index}" class="form-select" bind:value={field.field_type}>
 									{#each fieldTypes as type}
 										<option value={type.value}>{type.label}</option>
 									{/each}
@@ -155,21 +156,23 @@
 
 						{#if field.field_type === 'select' || field.field_type === 'multiselect'}
 							<div class="form-group">
-								<label class="form-label">Options (one per line)</label>
+								<label for="field-options-{index}" class="form-label">Options (one per line)</label>
 								<textarea
+									id="field-options-{index}"
 									class="form-textarea"
 									value={getOptionsText(field)}
 									on:input={(e) => handleOptionsChange(index, e.currentTarget.value)}
 									placeholder="Option 1&#10;Option 2&#10;Option 3"
 									rows="3"
-								/>
+								></textarea>
 							</div>
 						{/if}
 
 						<div class="form-row">
 							<div class="form-group">
-								<label class="form-label">Placeholder (optional)</label>
+								<label for="field-placeholder-{index}" class="form-label">Placeholder (optional)</label>
 								<input
+									id="field-placeholder-{index}"
 									type="text"
 									class="form-input"
 									bind:value={field.placeholder}

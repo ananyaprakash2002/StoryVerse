@@ -189,20 +189,38 @@
 		</div>
 
 		<div class="features">
-			<div class="feature-item">
-				<span class="feature-icon">📚</span>
-				<h3>Track Books</h3>
-				<p>Keep track of all the books you're reading</p>
+			<div class="features-hero">
+				<h2 class="features-title">Track Anything, Your Way</h2>
+				<p class="features-subtitle">Create unlimited custom categories with your own fields, icons, and layouts</p>
 			</div>
-			<div class="feature-item">
-				<span class="feature-icon">📖</span>
-				<h3>Manga Collection</h3>
-				<p>Monitor your manga reading progress</p>
+			<div class="feature-item featured">
+				<span class="feature-badge">✨ Main Feature</span>
+				<span class="feature-icon">🎨</span>
+				<h3>Custom Categories</h3>
+				<p>Design your own tracking categories with custom fields, colors, and icons. Track anything from books to workouts to recipes.</p>
 			</div>
-			<div class="feature-item">
-				<span class="feature-icon">🎬</span>
-				<h3>Anime & Movies</h3>
-				<p>Log your favorite shows and films</p>
+
+			<div class="feature-grid">
+				<div class="feature-item compact">
+					<span class="feature-icon">📋</span>
+					<h3>Ready Templates</h3>
+					<p>Start with Books, Movies, Anime, or Manga templates</p>
+				</div>
+				<div class="feature-item compact">
+					<span class="feature-icon">📊</span>
+					<h3>Analytics</h3>
+					<p>Visualize trends and insights with beautiful charts</p>
+				</div>
+				<div class="feature-item compact">
+					<span class="feature-icon">🔍</span>
+					<h3>Global Search</h3>
+					<p>Find anything across all your categories instantly</p>
+				</div>
+				<div class="feature-item compact">
+					<span class="feature-icon">🌈</span>
+					<h3>Your Rules</h3>
+					<p>Track recipes, travel plans, or whatever matters to you</p>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -215,6 +233,45 @@
 		align-items: center;
 		justify-content: center;
 		padding: var(--space-xl);
+		background: linear-gradient(135deg, 
+			var(--bg-primary) 0%, 
+			var(--bg-secondary) 100%
+		);
+		position: relative;
+		overflow: hidden;
+	}
+
+	.login-page::before,
+	.login-page::after {
+		content: '';
+		position: absolute;
+		border-radius: 50%;
+		pointer-events: none;
+		opacity: 0.1;
+	}
+
+	.login-page::before {
+		top: -10%;
+		right: -5%;
+		width: 500px;
+		height: 500px;
+		background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+		animation: float 20s ease-in-out infinite;
+	}
+
+	.login-page::after {
+		bottom: -10%;
+		left: -5%;
+		width: 400px;
+		height: 400px;
+		background: radial-gradient(circle, var(--primary-light) 0%, transparent 70%);
+		animation: float 15s ease-in-out infinite reverse;
+	}
+
+	@keyframes float {
+		0%, 100% { transform: translate(0, 0) scale(1); }
+		33% { transform: translate(30px, -30px) scale(1.1); }
+		66% { transform: translate(-20px, 20px) scale(0.9); }
 	}
 
 	.login-container {
@@ -224,10 +281,25 @@
 		grid-template-columns: 1fr 1fr;
 		gap: var(--space-2xl);
 		align-items: center;
+		position: relative;
+		z-index: 1;
 	}
 
 	.login-card {
 		padding: var(--space-2xl);
+		background: var(--bg-primary);
+		backdrop-filter: blur(10px);
+		border: 1px solid var(--border-color);
+		box-shadow: 
+			0 10px 30px rgba(0, 0, 0, 0.1),
+			0 0 0 1px rgba(255, 255, 255, 0.05);
+	}
+
+	:global([data-theme='light']) .login-card {
+		background: rgba(255, 255, 255, 0.95);
+		box-shadow: 
+			0 10px 40px rgba(0, 0, 0, 0.08),
+			0 0 0 1px rgba(0, 0, 0, 0.05);
 	}
 
 	.login-header {
@@ -259,6 +331,11 @@
 
 	form :global(.btn) {
 		width: 100%;
+		box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+	}
+
+	form :global(.btn:hover) {
+		box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
 	}
 
 	.password-input-wrapper {
@@ -300,6 +377,13 @@
 		border-radius: var(--radius-md);
 		color: var(--danger);
 		font-size: var(--font-size-sm);
+		animation: shake 0.3s ease-in-out;
+	}
+
+	@keyframes shake {
+		0%, 100% { transform: translateX(0); }
+		25% { transform: translateX(-5px); }
+		75% { transform: translateX(5px); }
 	}
 
 	.toggle-mode {
@@ -319,53 +403,245 @@
 		border: none;
 		color: var(--primary);
 		cursor: pointer;
-		font-weight: 500;
-		text-decoration: underline;
+		font-weight: 600;
+		text-decoration: none;
 		padding: 0;
 		margin-left: var(--space-xs);
+		transition: all var(--transition-fast);
+		border-bottom: 2px solid transparent;
 	}
 
 	.link-button:hover {
 		color: var(--primary-hover);
+		border-bottom-color: var(--primary-hover);
 	}
 
 	.features {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-lg);
+		gap: var(--space-xl);
+	}
+
+	.features-hero {
+		text-align: center;
+		margin-bottom: var(--space-lg);
+		animation: fadeInUp 0.6s ease-out;
+	}
+
+	.features-title {
+		font-size: 2.5rem;
+		font-weight: 800;
+		background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, var(--primary) 100%);
+		background-size: 200% 200%;
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+		margin-bottom: var(--space-md);
+		animation: gradientShift 3s ease infinite;
+		text-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
+	}
+
+	@keyframes gradientShift {
+		0%, 100% { background-position: 0% 50%; }
+		50% { background-position: 100% 50%; }
+	}
+
+	@keyframes fadeInUp {
+		from {
+			opacity: 0;
+			transform: translateY(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.features-subtitle {
+		color: var(--text-muted);
+		font-size: var(--font-size-lg);
+		line-height: 1.6;
+		font-weight: 500;
 	}
 
 	.feature-item {
 		text-align: center;
-		padding: var(--space-lg);
-		background: rgba(31, 41, 55, 0.3);
+		padding: var(--space-xl);
+		background: var(--bg-secondary);
 		border-radius: var(--radius-lg);
 		border: 1px solid var(--border-color);
-		transition: all var(--transition-base);
+		transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+		animation: fadeInUp 0.6s ease-out backwards;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.feature-item.featured {
+		background: linear-gradient(135deg, 
+			var(--bg-secondary) 0%, 
+			var(--bg-primary) 100%
+		);
+		border: 2px solid var(--primary);
+		box-shadow: 
+			0 8px 32px rgba(99, 102, 241, 0.3),
+			0 0 60px rgba(99, 102, 241, 0.15),
+			inset 0 1px 0 rgba(255, 255, 255, 0.1);
+		animation: fadeInUp 0.6s ease-out 0.1s backwards, glow 3s ease-in-out infinite;
+	}
+
+	@keyframes glow {
+		0%, 100% { box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3), 0 0 60px rgba(99, 102, 241, 0.15); }
+		50% { box-shadow: 0 8px 32px rgba(99, 102, 241, 0.5), 0 0 80px rgba(99, 102, 241, 0.25); }
+	}
+
+	:global([data-theme='light']) .feature-item.featured {
+		box-shadow: 
+			0 8px 32px rgba(99, 102, 241, 0.2),
+			0 0 60px rgba(99, 102, 241, 0.1),
+			inset 0 1px 0 rgba(255, 255, 255, 0.8);
+		animation: fadeInUp 0.6s ease-out 0.1s backwards, glowLight 3s ease-in-out infinite;
+	}
+
+	@keyframes glowLight {
+		0%, 100% { box-shadow: 0 8px 32px rgba(99, 102, 241, 0.2), 0 0 60px rgba(99, 102, 241, 0.1); }
+		50% { box-shadow: 0 12px 40px rgba(99, 102, 241, 0.3), 0 0 80px rgba(99, 102, 241, 0.15); }
+	}
+
+	.feature-badge {
+		position: absolute;
+		top: var(--space-md);
+		right: var(--space-md);
+		background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+		color: white;
+		padding: var(--space-xs) var(--space-md);
+		border-radius: var(--radius-full);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+		animation: pulse 2s ease-in-out infinite, shimmer 3s linear infinite;
+	}
+
+	@keyframes pulse {
+		0%, 100% { transform: scale(1); }
+		50% { transform: scale(1.08); }
+	}
+
+	@keyframes shimmer {
+		0% { background-position: -100% 0; }
+		100% { background-position: 200% 0; }
+	}
+
+	.feature-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		animation-delay: 0.2s;
+		gap: var(--space-md);
+	}
+
+	.feature-item.compact {
+		padding: var(--space-lg);
+	}
+
+	.feature-item.compact:nth-child(1) {
+		animation-delay: 0.3s;
+	}
+
+	.feature-item.compact:nth-child(2) {
+		animation-delay: 0.4s;
+	}
+
+	.feature-item.compact:nth-child(3) {
+		animation-delay: 0.5s;
+	}
+
+	.feature-item.compact:nth-child(4) {
+		animation-delay: 0.6s;
+	}
+
+	.feature-item.compact .feature-icon {
+		font-size: 2rem;
+		margin-bottom: var(--space-sm);
+	}
+
+	.feature-item.compact h3 {
+		font-size: var(--font-size-md);
+		font-weight: 700;
+	}
+
+	.feature-item.compact p {
+		font-size: var(--font-size-xs);
+	}
+
+	:global([data-theme='light']) .feature-item {
+		background: rgba(255, 255, 255, 0.8);
+		backdrop-filter: blur(8px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+	}
+
+	.feature-item::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+		opacity: 0;
+		transition: opacity var(--transition-base);
 	}
 
 	.feature-item:hover {
 		border-color: var(--primary);
-		transform: translateX(5px);
+		transform: translateY(-8px) scale(1.02);
+		box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+	}
+
+	.feature-item.featured:hover {
+		transform: translateY(-8px) scale(1.02);
+		box-shadow: 
+			0 16px 48px rgba(99, 102, 241, 0.4),
+			0 0 80px rgba(99, 102, 241, 0.2);
+	}
+
+	.feature-item:hover::before {
+		opacity: 0.05;
+	}
+
+	:global([data-theme='light']) .feature-item:hover {
+		box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 	}
 
 	.feature-icon {
 		font-size: 3rem;
 		display: block;
 		margin-bottom: var(--space-md);
+		position: relative;
+		z-index: 1;
 	}
 
 	.feature-item h3 {
 		font-size: var(--font-size-lg);
 		margin-bottom: var(--space-sm);
+		position: relative;
+		z-index: 1;
+		font-weight: 600;
 	}
 
 	.feature-item p {
 		color: var(--text-muted);
 		font-size: var(--font-size-sm);
+		position: relative;
+		z-index: 1;
+		line-height: 1.6;
 	}
 
 	@media (max-width: 768px) {
+		.login-page {
+			padding: var(--space-md);
+		}
+
 		.login-container {
 			grid-template-columns: 1fr;
 			gap: var(--space-xl);
@@ -377,6 +653,18 @@
 
 		.login-card {
 			padding: var(--space-xl);
+		}
+
+		.brand-title {
+			font-size: var(--font-size-3xl);
+		}
+
+		.features-title {
+			font-size: var(--font-size-xl);
+		}
+
+		.feature-grid {
+			grid-template-columns: 1fr;
 		}
 	}
 </style>

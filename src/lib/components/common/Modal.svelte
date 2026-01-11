@@ -4,7 +4,7 @@
 	export let onClose: (() => void) | undefined = undefined;
 
 	const handleClose = () => {
-		isOpen = false;
+		isOpen = false; // Needed for bind:isOpen to work
 		if (onClose) onClose();
 	};
 
@@ -16,7 +16,14 @@
 </script>
 
 {#if isOpen}
-	<div class="modal-overlay" on:click={handleBackdropClick} role="dialog" aria-modal="true">
+	<div 
+		class="modal-overlay" 
+		on:click={handleBackdropClick}
+		on:keydown={(e) => e.key === 'Escape' && handleClose()}
+		role="dialog" 
+		aria-modal="true"
+		tabindex="-1"
+	>
 		<div class="modal">
 			<div class="modal-header">
 				<h3>{title}</h3>

@@ -4,10 +4,12 @@
 	import { signOut } from '$lib/supabase/auth';
 	import { goto } from '$app/navigation';
 	import { toasts } from '$lib/stores/ui';
+	import ThemeToggle from './ThemeToggle.svelte';
 
 	const navItems = [
 		{ name: 'Dashboard', href: '/', icon: '📊' },
-		{ name: 'Categories', href: '/categories', icon: '📁' }
+		{ name: 'Categories', href: '/categories', icon: '📁' },
+		{ name: 'Analytics', href: '/analytics', icon: '📈' }
 	];
 
 	let showUserMenu = false;
@@ -47,6 +49,7 @@
 		</div>
 
 		<div class="navbar-user">
+<ThemeToggle />
 			{#if $user}
 				<button class="user-button" on:click={toggleUserMenu}>
 					<span class="user-email">{$user.email}</span>
@@ -132,6 +135,9 @@
 	}
 
 	.navbar-user {
+		display: flex;
+		align-items: center;
+		gap: var(--space-md);
 		position: relative;
 		flex-shrink: 0;
 	}

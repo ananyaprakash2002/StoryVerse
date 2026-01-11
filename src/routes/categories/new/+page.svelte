@@ -69,8 +69,8 @@
 		<form on:submit={handleSubmit}>
 			<Input label="Category Name" bind:value={name} placeholder="e.g., Video Games, Podcasts" required />
 
-			<div class="form-group">
-				<label class="form-label">Icon</label>
+			<fieldset class="form-group">
+				<legend class="form-label">Icon</legend>
 				<div class="icon-grid">
 					{#each iconOptions as iconOption}
 						<button
@@ -78,15 +78,16 @@
 							class="icon-button"
 							class:active={icon === iconOption}
 							on:click={() => (icon = iconOption)}
+							aria-label="Select icon {iconOption}"
 						>
 							{iconOption}
 						</button>
 					{/each}
 				</div>
-			</div>
+			</fieldset>
 
-			<div class="form-group">
-				<label class="form-label">Color</label>
+			<fieldset class="form-group">
+				<legend class="form-label">Color</legend>
 				<div class="color-grid">
 					{#each colorOptions as colorOption}
 						<button
@@ -95,6 +96,7 @@
 							class:active={color === colorOption}
 							style="background-color: {colorOption}"
 							on:click={() => (color = colorOption)}
+							aria-label="Select color {colorOption}"
 						>
 							{#if color === colorOption}
 								✓
@@ -102,7 +104,7 @@
 						</button>
 					{/each}
 				</div>
-			</div>
+			</fieldset>
 
 			<div class="form-group">
 				<label for="description" class="form-label">Description (Optional)</label>
@@ -112,7 +114,7 @@
 					bind:value={description}
 					placeholder="What will you track in this category?"
 					rows="3"
-				/>
+				></textarea>
 			</div>
 
 			<!-- Field Builder -->
@@ -164,6 +166,16 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-xl);
+	}
+
+	fieldset {
+		border: none;
+		padding: 0;
+		margin: 0;
+	}
+
+	legend {
+		padding: 0;
 	}
 
 	.icon-grid {

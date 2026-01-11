@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { user } from '$lib/stores/user';
+	import { theme } from '$lib/stores/theme';
 	import { getCurrentUser, onAuthStateChange } from '$lib/supabase/auth';
 	import Navbar from '$lib/components/layout/Navbar.svelte';
 	import Toast from '$lib/components/common/Toast.svelte';
@@ -31,6 +32,9 @@
 	}
 
 	onMount(() => {
+		// Initialize theme
+		theme.init();
+		
 		// Get initial user
 		getCurrentUser().then((currentUser) => {
 			user.set(currentUser);

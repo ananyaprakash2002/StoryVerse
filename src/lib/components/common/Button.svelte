@@ -4,8 +4,12 @@
 	export let size: 'sm' | 'md' | 'lg' = 'md';
 	export let disabled = false;
 	export let onClick: (() => void) | undefined = undefined;
+	export let stopPropagation: boolean = false;
 
-	const handleClick = () => {
+	const handleClick = (event?: MouseEvent) => {
+		if (stopPropagation && event) {
+			event.stopPropagation();
+		}
 		if (!disabled && onClick) {
 			onClick();
 		}

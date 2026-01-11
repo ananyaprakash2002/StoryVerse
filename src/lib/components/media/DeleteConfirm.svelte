@@ -6,8 +6,18 @@
 </script>
 
 {#if isOpen}
-	<div class="modal-overlay" on:click={onCancel} role="dialog" aria-modal="true">
-		<div class="modal delete-modal" on:click|stopPropagation>
+	<div 
+		class="modal-overlay" 
+		on:click={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+		on:keydown={(e) => e.key === 'Escape' && onCancel()}
+		role="dialog" 
+		aria-modal="true"
+		tabindex="-1"
+	>
+		<div 
+			class="modal delete-modal" 
+			role="document"
+		>
 			<div class="modal-header">
 				<h3>Confirm Delete</h3>
 			</div>
