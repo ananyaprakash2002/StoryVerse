@@ -81,16 +81,11 @@
 						{/if}
 
 						<!-- Actions -->
-						<div 
-							class="card-actions" 
-							onclick={(e) => e.stopPropagation()}
-							onkeydown={(e) => e.stopPropagation()}
-							role="group"
-						>
-							<Button variant="secondary" size="sm" onClick={() => onEdit(item)}>
+						<div class="card-actions" role="group">
+							<Button variant="secondary" size="sm" onClick={() => onEdit(item)} stopPropagation={true}>
 								Edit
 							</Button>
-							<Button variant="danger" size="sm" onClick={() => onDelete(item)}>
+							<Button variant="danger" size="sm" onClick={() => onDelete(item)} stopPropagation={true}>
 								Delete
 							</Button>
 						</div>

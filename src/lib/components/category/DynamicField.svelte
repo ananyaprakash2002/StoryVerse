@@ -5,6 +5,8 @@
 	export let value: any = null;
 	export let disabled = false;
 
+	let showDropdown = false;
+
 	// Handle value changes
 	function handleChange(e: Event) {
 		const target = e.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
@@ -137,23 +139,40 @@
 			{/if}
 		</select>
 	{:else if field.field_type === 'multiselect'}
-		<select
-			id={field.name}
-			name={field.name}
-			class="form-select"
-			multiple
-			on:change={handleChange}
-			required={field.required}
-			{disabled}
-			size="5"
-		>
-			{#if field.options && Array.isArray(field.options)}
-				{#each field.options as option}
-					<option value={option} selected={value && value.includes(option)}>{option}</option>
-				{/each}
+		<div class="multiselect-dropdown">
+			<div class="multiselect-selected" on:click={() => showDropdown = !showDropdown} on:keydown={(e) => e.key === 'Enter' && (showDropdown = !showDropdown)} role="button" tabindex="0">
+				{#if value && value.length > 0}
+					<span class="selected-count">{value.length} selected</span>
+					<span class="selected-preview">{value.slice(0, 2).join(', ')}{value.length > 2 ? '...' : ''}</span>
+				{:else}
+					<span class="placeholder">Select options...</span>
+				{/if}
+				<span class="dropdown-arrow">▼</span>
+			</div>
+			{#if showDropdown}
+				<div class="multiselect-options">
+					{#if field.options && Array.isArray(field.options)}
+						{#each field.options as option}
+							<label class="multiselect-option">
+								<input
+									type="checkbox"
+									checked={value && value.includes(option)}
+									on:change={(e) => {
+										if (e.currentTarget.checked) {
+											value = [...(value || []), option];
+										} else {
+											value = (value || []).filter((v: string) => v !== option);
+										}
+									}}
+									{disabled}
+								/>
+								<span>{option}</span>
+							</label>
+						{/each}
+					{/if}
+				</div>
 			{/if}
-		</select>
-		<p class="field-hint">Hold Ctrl/Cmd to select multiple</p>
+		</div>
 	{:else if field.field_type === 'tags'}
 		<input
 			type="text"
@@ -245,4 +264,98 @@
 		font-size: var(--font-size-sm);
 		color: var(--text-secondary);
 	}
+
+	.multiselect-dropdown {
+		position: relative;
+		width: 100%;
+	}
+
+	.multiselect-selected {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		background: var(--bg-secondary);
+		border: 1px solid var(--border-color);
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		min-height: 42px;
+	}
+
+	.multiselect-selected:hover {
+		border-color: var(--primary);
+	}
+
+	.selected-count {
+		background: var(--primary);
+		color: white;
+		padding: 2px 8px;
+		border-radius: var(--radius-sm);
+		font-size: var(--font-size-xs);
+		font-weight: 600;
+	}
+
+	.selected-preview {
+		flex: 1;
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.placeholder {
+		flex: 1;
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+	}
+
+	.dropdown-arrow {
+		color: var(--text-muted);
+		font-size: 10px;
+		transition: transform var(--transition-fast);
+	}
+
+	.multiselect-options {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		margin-top: var(--space-xs);
+		background: var(--bg-secondary);
+		border: 1px solid var(--border-color);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-lg);
+		max-height: 250px;
+		overflow-y: auto;
+		z-index: 100;
+		padding: var(--space-xs);
+	}
+
+	.multiselect-option {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-sm);
+		cursor: pointer;
+		border-radius: var(--radius-sm);
+		transition: background var(--transition-fast);
+	}
+
+	.multiselect-option:hover {
+		background: var(--bg-tertiary);
+	}
+
+	.multiselect-option input[type="checkbox"] {
+		cursor: pointer;
+	}
+
+	.multiselect-option span {
+		flex: 1;
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+	}
+
 </style>

@@ -69,6 +69,7 @@ Edit `.env` with your Supabase credentials:
 ```
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
+VITE_GOOGLE_BOOKS_API_KEY=your-google-api-key-here
 ```
 
 ### 4. Run Development Server

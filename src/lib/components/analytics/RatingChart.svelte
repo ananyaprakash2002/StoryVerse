@@ -104,15 +104,15 @@
 						beginAtZero: true,
 						ticks: {
 							stepSize: 1,
-							color: document.documentElement.getAttribute('data-theme') !== 'light' ? '#f9fafb' : '#24292f'
+							color: theme !== 'light' ? '#f9fafb' : '#24292f'
 						},
 						grid: {
-							color: 'rgba(255, 255, 255, 0.1)'
+							color: theme !== 'light' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)'
 						}
 					},
 					x: {
 						ticks: {
-							color: document.documentElement.getAttribute('data-theme') !== 'light' ? '#f9fafb' : '#24292f'
+							color: theme !== 'light' ? '#f9fafb' : '#24292f'
 						},
 						grid: {
 							display: false

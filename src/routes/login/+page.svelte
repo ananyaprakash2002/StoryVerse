@@ -295,7 +295,7 @@
 			0 0 0 1px rgba(255, 255, 255, 0.05);
 	}
 
-	[data-theme='light'] .login-card {
+	:global([data-theme='light']) .login-card {
 		background: rgba(255, 255, 255, 0.95);
 		box-shadow: 
 			0 10px 40px rgba(0, 0, 0, 0.08),
@@ -494,14 +494,11 @@
 		50% { box-shadow: 0 8px 32px rgba(99, 102, 241, 0.5), 0 0 80px rgba(99, 102, 241, 0.25); }
 	}
 
-	[data-theme='light'] .feature-item.featured {
+	:global([data-theme='light']) .feature-item.featured {
 		box-shadow: 
 			0 8px 32px rgba(99, 102, 241, 0.2),
 			0 0 60px rgba(99, 102, 241, 0.1),
 			inset 0 1px 0 rgba(255, 255, 255, 0.8);
-	}
-
-	[data-theme='light'] .feature-item.featured {
 		animation: fadeInUp 0.6s ease-out 0.1s backwards, glowLight 3s ease-in-out infinite;
 	}
 
@@ -577,7 +574,7 @@
 		font-size: var(--font-size-xs);
 	}
 
-	[data-theme='light'] .feature-item {
+	:global([data-theme='light']) .feature-item {
 		background: rgba(255, 255, 255, 0.8);
 		backdrop-filter: blur(8px);
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -612,7 +609,7 @@
 		opacity: 0.05;
 	}
 
-	[data-theme='light'] .feature-item:hover {
+	:global([data-theme='light']) .feature-item:hover {
 		box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 	}
 

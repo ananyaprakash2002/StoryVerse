@@ -8,7 +8,7 @@
 {#if isOpen}
 	<div 
 		class="modal-overlay" 
-		on:click={onCancel}
+		on:click={(e) => { if (e.target === e.currentTarget) onCancel(); }}
 		on:keydown={(e) => e.key === 'Escape' && onCancel()}
 		role="dialog" 
 		aria-modal="true"
@@ -16,8 +16,6 @@
 	>
 		<div 
 			class="modal delete-modal" 
-			on:click|stopPropagation
-			on:keydown|stopPropagation
 			role="document"
 		>
 			<div class="modal-header">
