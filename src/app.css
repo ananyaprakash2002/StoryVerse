@@ -209,7 +209,10 @@ h5,
 h6 {
 	font-weight: 600;
 	line-height: 1.2;
-	color: var(--text-primary);
+	background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary) 100%) !important;
+	-webkit-background-clip: text !important;
+	-webkit-text-fill-color: transparent !important;
+	background-clip: text !important;
 }
 
 h1 {

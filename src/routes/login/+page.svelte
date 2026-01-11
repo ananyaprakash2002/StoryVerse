@@ -627,7 +627,6 @@
 	.feature-item h3 {
 		font-size: var(--font-size-lg);
 		margin-bottom: var(--space-sm);
-		color: var(--text-primary);
 		position: relative;
 		z-index: 1;
 		font-weight: 600;

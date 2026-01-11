@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { tweened } from 'svelte/motion';
+	import { cubicOut } from 'svelte/easing';
 	import { error as logError } from '$lib/utils/logger';
 	import { goto } from '$app/navigation';
 	import { getUserCategories, getCategoryStats } from '$lib/services/categories';
@@ -7,6 +9,12 @@
 	import type { Category, CategoryItem } from '$lib/types/category';
 	import Loader from '$lib/components/common/Loader.svelte';
 	import Button from '$lib/components/common/Button.svelte';
+
+	// Animated counters
+	const categoriesCount = tweened(0, { duration: 1000, easing: cubicOut });
+	const totalItemsCount = tweened(0, { duration: 1200, easing: cubicOut });
+	const last7DaysCount = tweened(0, { duration: 800, easing: cubicOut });
+	const last30DaysCount = tweened(0, { duration: 1000, easing: cubicOut });
 
 	let categories: Category[] = [];
 	let loading = true;
@@ -19,6 +27,14 @@
 	}> = [];
 	let categoryStats: Record<string, { total_items: number }> = {};
 	let allItems: CategoryItem[] = [];
+
+	// Time-based greeting
+	function getGreeting(): string {
+		const hour = new Date().getHours();
+		if (hour < 12) return 'Good morning';
+		if (hour < 18) return 'Good afternoon';
+		return 'Good evening';
+	}
 
 	onMount(async () => {
 		await loadData();
@@ -68,6 +84,11 @@
 			logError('Failed to load dashboard:', err);
 		} finally {
 			loading = false;
+			// Animate counters after loading
+			setTimeout(() => {
+				categoriesCount.set(categories.length);
+				totalItemsCount.set(totalItems);
+			}, 100);
 		}
 	}
 
@@ -105,6 +126,12 @@
 		return daysSince <= 30;
 	}).length;
 
+	// Update animated counters when values change
+	$: if (!loading) {
+		last7DaysCount.set(itemsLast7Days);
+		last30DaysCount.set(itemsLast30Days);
+	}
+
 	// Top categories by activity
 	$: topCategories = categories
 		.map((cat) => ({
@@ -120,9 +147,9 @@
 
 <div class="page container">
 	<div class="welcome-section">
-		<div>
-			<h1>Welcome back! 👋</h1>
-			<p class="text-muted">Here's what's happening with your tracking</p>
+		<div class="welcome-content">
+			<h1 class="welcome-title">{getGreeting()}! 👋</h1>
+			<p class="welcome-subtitle">Here's what's happening with your tracking journey</p>
 		</div>
 		<Button variant="primary" onClick={() => goto('/categories')}>+ New Category</Button>
 	</div>
@@ -139,36 +166,36 @@
 			<Button variant="primary" onClick={() => goto('/categories')}>Create Category</Button>
 		</div>
 	{:else}
-		<!-- Enhanced Quick Stats -->
+		<!-- Enhanced Quick Stats with Animations -->
 		<div class="stats-row">
-			<div class="stat-box">
+			<div class="stat-box" style="animation-delay: 0.1s">
 				<div class="stat-icon">📊</div>
 				<div class="stat-content">
-					<div class="stat-value">{categories.length}</div>
+					<div class="stat-value">{Math.floor($categoriesCount)}</div>
 					<div class="stat-label">{categories.length === 1 ? 'Category' : 'Categories'}</div>
 				</div>
 			</div>
 
-			<div class="stat-box">
+			<div class="stat-box" style="animation-delay: 0.2s">
 				<div class="stat-icon">📝</div>
 				<div class="stat-content">
-					<div class="stat-value">{totalItems}</div>
+					<div class="stat-value">{Math.floor($totalItemsCount)}</div>
 					<div class="stat-label">Total Items</div>
 				</div>
 			</div>
 
-			<div class="stat-box">
+			<div class="stat-box" style="animation-delay: 0.3s">
 				<div class="stat-icon">🔥</div>
 				<div class="stat-content">
-					<div class="stat-value">{itemsLast7Days}</div>
+					<div class="stat-value">{Math.floor($last7DaysCount)}</div>
 					<div class="stat-label">Last 7 Days</div>
 				</div>
 			</div>
 
-			<div class="stat-box">
+			<div class="stat-box" style="animation-delay: 0.4s">
 				<div class="stat-icon">📈</div>
 				<div class="stat-content">
-					<div class="stat-value">{itemsLast30Days}</div>
+					<div class="stat-value">{Math.floor($last30DaysCount)}</div>
 					<div class="stat-label">Last 30 Days</div>
 				</div>
 			</div>
@@ -176,12 +203,16 @@
 
 		<!-- Top Categories Distribution -->
 		{#if topCategories.length > 0}
-			<div class="section">
-				<h2>Category Distribution</h2>
+			<div class="section distribution-section">
+				<div class="section-header">
+					<h2 class="section-title">Category Distribution</h2>
+					<p class="section-subtitle">See how your collection is distributed</p>
+				</div>
 				<div class="distribution-list card">
-					{#each topCategories as category}
+					{#each topCategories as category, index}
 						<button
 							class="distribution-item"
+							style="animation-delay: {0.5 + index * 0.1}s"
 							on:click={() => goto(`/categories/${category.id}`)}
 						>
 							<div class="distribution-header">
@@ -194,7 +225,7 @@
 							<div class="progress-bar">
 								<div
 									class="progress-fill"
-									style="width: {category.percentage}%; background-color: {category.color || 'var(--primary)'}"
+									style="width: {category.percentage}%; background-color: {category.color || 'var(--primary)'}; animation-delay: {0.6 + index * 0.1}s"
 								></div>
 							</div>
 							<div class="percentage-label">{category.percentage.toFixed(1)}%</div>
@@ -236,15 +267,16 @@
 
 		<!-- Recent Activity -->
 		{#if recentActivity.length > 0}
-			<div class="section">
+			<div class="section activity-section">
 				<div class="section-header">
-					<h2>Recent Activity</h2>
+					<h2 class="section-title">Recent Activity</h2>
 					<p class="section-subtitle">Latest items you've added</p>
 				</div>
 				<div class="activity-list card">
-					{#each recentActivity.slice(0, 5) as activity}
+					{#each recentActivity.slice(0, 5) as activity, index}
 						<button
 							class="activity-item"
+							style="animation-delay: {0.5 + index * 0.08}s"
 							on:click={() => goto(`/categories/${activity.categoryId}`)}
 						>
 							<span class="activity-icon">{activity.categoryIcon}</span>
@@ -276,11 +308,33 @@
 		justify-content: space-between;
 		align-items: flex-start;
 		margin-bottom: var(--space-2xl);
+		animation: fadeInUp 0.6s ease-out;
 	}
 
-	.welcome-section h1 {
+	@keyframes fadeInUp {
+		from {
+			opacity: 0;
+			transform: translateY(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.welcome-title {
 		font-size: 2.5rem;
 		margin-bottom: var(--space-sm);
+		background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary) 100%);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+		font-weight: 800;
+	}
+
+	.welcome-subtitle {
+		color: var(--text-muted);
+		font-size: var(--font-size-lg);
 	}
 
 	.loading-container {
@@ -312,30 +366,60 @@
 		align-items: center;
 		gap: var(--space-lg);
 		padding: var(--space-xl);
-		background: var(--bg-secondary);
+		background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
 		border-radius: var(--radius-lg);
 		border: 1px solid var(--border-color);
-		transition: all var(--transition-base);
+		transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+		position: relative;
+		overflow: hidden;
+		animation: fadeInUp 0.6s ease-out backwards;
+	}
+
+	.stat-box::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+		opacity: 0;
+		transition: opacity var(--transition-base);
 	}
 
 	.stat-box:hover {
-		transform: translateY(-2px);
-		box-shadow: var(--shadow-lg);
+		transform: translateY(-4px) scale(1.02);
+		box-shadow: 
+			0 12px 32px rgba(99, 102, 241, 0.15),
+			0 0 40px rgba(99, 102, 241, 0.1);
+		border-color: var(--primary);
+	}
+
+	.stat-box:hover::before {
+		opacity: 0.05;
 	}
 
 	.stat-icon {
 		font-size: 2.5rem;
+		position: relative;
+		z-index: 1;
 	}
 
 	.stat-content {
 		flex: 1;
+		position: relative;
+		z-index: 1;
 	}
 
 	.stat-value {
 		font-size: 2.5rem;
-		font-weight: 700;
+		font-weight: 800;
 		color: var(--primary);
 		line-height: 1;
+		background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
 	}
 
 	.stat-label {
@@ -347,7 +431,7 @@
 	}
 
 	.distribution-list {
-		padding: var(--space-lg);
+		padding: var(--space-xl);
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-lg);
@@ -358,16 +442,35 @@
 		text-align: left;
 		background: transparent;
 		border: none;
-		padding: var(--space-md);
+		padding: var(--space-lg);
 		border-radius: var(--radius-md);
 		cursor: pointer;
-		transition: background var(--transition-fast);
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 		color: inherit;
 		width: 100%;
+		position: relative;
+		animation: fadeInUp 0.4s ease-out backwards;
+	}
+
+	.distribution-item::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 0;
+		height: 100%;
+		width: 3px;
+		background: var(--primary);
+		opacity: 0;
+		transition: opacity var(--transition-fast);
 	}
 
 	.distribution-item:hover {
-		background: rgba(96, 165, 250, 0.05);
+		background: rgba(99, 102, 241, 0.05);
+		transform: translateX(8px);
+	}
+
+	.distribution-item:hover::before {
+		opacity: 1;
 	}
 
 	.distribution-header {
@@ -378,12 +481,13 @@
 	}
 
 	.category-icon-small {
-		font-size: 1.5rem;
+		font-size: 1.75rem;
 	}
 
 	.category-name {
-		font-weight: 500;
+		font-weight: 600;
 		flex: 1;
+		color: var(--text-primary);
 	}
 
 	.item-count {
@@ -392,17 +496,24 @@
 	}
 
 	.progress-bar {
-		height: 8px;
+		height: 10px;
 		background: var(--bg-tertiary);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-full);
 		overflow: hidden;
-		margin-bottom: var(--space-xs);
+		margin-bottom: var(--space-sm);
+		box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
 
 	.progress-fill {
 		height: 100%;
 		transition: width var(--transition-base);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-full);
+		box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+		animation: progressGrow 0.8s ease-out backwards;
+	}
+
+	@keyframes progressGrow {
+		from { width: 0 !important; }
 	}
 
 	.percentage-label {
@@ -415,12 +526,29 @@
 		margin-bottom: var(--space-2xl);
 	}
 
+	.section.distribution-section,
+	.section.activity-section {
+		animation: fadeInUp 0.6s ease-out 0.4s backwards;
+	}
+
+	.section-title {
+		background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary) 100%);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+		font-weight: 700;
+	}
+
 	.section-header {
 		margin-bottom: var(--space-lg);
 	}
 
 	.section-header h2 {
 		margin-bottom: var(--space-xs);
+		background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary) 100%);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
 	}
 
 	.section-subtitle {
@@ -438,15 +566,19 @@
 		padding: var(--space-xl);
 		text-align: left;
 		cursor: pointer;
-		transition: all var(--transition-base);
+		transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 		width: 100%;
 		border: 1px solid var(--border-color);
+		background: var(--bg-secondary);
 	}
 
 	.category-card:hover {
-		transform: translateY(-4px);
-		box-shadow: var(--shadow-lg);
+		transform: translateY(-6px) scale(1.02);
+		box-shadow: 
+			0 12px 32px rgba(0, 0, 0, 0.15),
+			0 0 40px rgba(99, 102, 241, 0.1);
 		border-color: var(--primary);
+		background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
 	}
 
 	.card-header {
@@ -505,16 +637,31 @@
 	.activity-item {
 		display: flex;
 		align-items: center;
-		gap: var(--space-md);
-		padding: var(--space-lg);
+		gap: var(--space-lg);
+		padding: var(--space-xl);
 		width: 100%;
 		background: transparent;
 		border: none;
 		border-bottom: 1px solid var(--border-color);
 		cursor: pointer;
 		text-align: left;
-		transition: background var(--transition-fast);
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 		color: inherit;
+		animation: fadeInUp 0.4s ease-out backwards;
+		position: relative;
+	}
+
+	.activity-item::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 0;
+		height: 100%;
+		width: 3px;
+		background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+		opacity: 0;
+		transform: scaleY(0);
+		transition: all var(--transition-base);
 	}
 
 	.activity-item:last-child {
@@ -522,11 +669,17 @@
 	}
 
 	.activity-item:hover {
-		background: rgba(96, 165, 250, 0.05);
+		background: linear-gradient(90deg, rgba(99, 102, 241, 0.05) 0%, transparent 100%);
+		transform: translateX(8px);
+	}
+
+	.activity-item:hover::before {
+		opacity: 1;
+		transform: scaleY(1);
 	}
 
 	.activity-icon {
-		font-size: 1.75rem;
+		font-size: 2rem;
 		flex-shrink: 0;
 	}
 
@@ -536,7 +689,7 @@
 	}
 
 	.activity-title {
-		font-weight: 500;
+		font-weight: 600;
 		color: var(--text-primary);
 		margin-bottom: var(--space-xs);
 		overflow: hidden;
@@ -554,23 +707,24 @@
 	}
 
 	.category-badge {
-		background: rgba(96, 165, 250, 0.1);
+		background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%);
 		color: var(--primary);
 		padding: var(--space-xs) var(--space-sm);
 		border-radius: var(--radius-sm);
 		font-size: var(--font-size-xs);
-		font-weight: 500;
+		font-weight: 600;
+		border: 1px solid rgba(99, 102, 241, 0.2);
 	}
 
 	.arrow {
 		color: var(--text-muted);
-		font-size: 1.25rem;
+		font-size: 1.5rem;
 		flex-shrink: 0;
-		transition: transform var(--transition-fast);
+		transition: all var(--transition-fast);
 	}
 
 	.activity-item:hover .arrow {
-		transform: translateX(4px);
+		transform: translateX(6px) scale(1.1);
 		color: var(--primary);
 	}
 
