@@ -11,6 +11,9 @@
 	const dispatch = createEventDispatcher();
 
 	let optionsText: string = Array.isArray(field.options) ? field.options.join('\n') : '';
+	
+	// Check if this is a new field (not yet saved to database)
+	$: isNewField = field.id?.toString().startsWith('new_') ?? false;
 
 	function handleDelete() {
 		dispatch('delete', index);
@@ -78,22 +81,42 @@
 					type="text"
 					id={"field-name-" + index}
 					class="input input-sm"
-					value={field.name}
-					disabled
-					title="Field name cannot be changed after creation"
+					bind:value={field.name}
+					on:input={handleUpdate}
+					disabled={!isNewField}
+					title={isNewField ? "Set a unique field name" : "Field name cannot be changed after creation"}
 				/>
 			</div>
 
 			<div class="form-group">
 				<label for={"field-type-" + index}>Type</label>
-				<input
-					type="text"
-					id={"field-type-" + index}
-					class="input input-sm"
-					value={field.field_type}
-					disabled
-					title="Field type cannot be changed after creation"
-				/>
+				{#if isNewField}
+					<select
+						id={"field-type-" + index}
+						class="input input-sm"
+						bind:value={field.field_type}
+						on:change={handleUpdate}
+						title="Choose field type"
+					>
+						<option value="text">Text</option>
+						<option value="textarea">Textarea</option>
+						<option value="number">Number</option>
+						<option value="date">Date</option>
+						<option value="select">Select (Dropdown)</option>
+						<option value="multiselect">Multi-select</option>
+						<option value="url">URL</option>
+						<option value="rating">Rating</option>
+					</select>
+				{:else}
+					<input
+						type="text"
+						id={"field-type-" + index}
+						class="input input-sm"
+						value={field.field_type}
+						disabled
+						title="Field type cannot be changed after creation"
+					/>
+				{/if}
 			</div>
 		</div>
 
