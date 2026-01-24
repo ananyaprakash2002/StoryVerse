@@ -92,6 +92,67 @@
 	function openAPISearch() {
 		showAPISearch = true;
 	}
+
+	// Auto-update reading link when chapter changes
+	let previousChapter: string | null = null;
+	
+	$: {
+		// Find chapter and link fields
+		const chapterField = fields.find(f => 
+			f.name.toLowerCase().includes('chapter') && 
+			!f.name.toLowerCase().includes('link')
+		);
+		const linkField = fields.find(f => 
+			f.name.toLowerCase().includes('link') || 
+			f.name.toLowerCase().includes('url')
+		);
+
+		// Only proceed if both fields exist
+		if (chapterField && linkField) {
+			const currentChapter = values[chapterField.name];
+			const currentLink = values[linkField.name];
+
+			// Check if chapter was changed (not initial load)
+			if (previousChapter !== null && 
+				currentChapter !== previousChapter && 
+				currentChapter && 
+				currentLink) {
+				
+				// Update the URL by replacing chapter number
+				const updatedLink = updateChapterInUrl(currentLink, currentChapter);
+				if (updatedLink !== currentLink) {
+					values[linkField.name] = updatedLink;
+				}
+			}
+
+			// Store current chapter for next comparison
+			previousChapter = currentChapter;
+		}
+	}
+
+	/**
+	 * Updates the chapter number in a URL
+	 * Handles patterns like: /chapter-20/, /chapter/20/, /ch-20/, etc.
+	 */
+	function updateChapterInUrl(url: string, newChapter: string): string {
+		// Common manga URL patterns
+		const patterns = [
+			/(\/chapter[-_]?)(\d+(?:\.\d+)?)(\/|$)/i,  // /chapter-20/ or /chapter_20/
+			/(\/chapter\/?)(\d+(?:\.\d+)?)(\/|$)/i,    // /chapter/20/
+			/(\/ch[-_]?)(\d+(?:\.\d+)?)(\/|$)/i,       // /ch-20/
+			/(\/ep[-_]?)(\d+(?:\.\d+)?)(\/|$)/i,       // /ep-20/ (episode)
+			/(\/episode[-_]?)(\d+(?:\.\d+)?)(\/|$)/i,  // /episode-20/
+		];
+
+		for (const pattern of patterns) {
+			if (pattern.test(url)) {
+				return url.replace(pattern, `$1${newChapter}$3`);
+			}
+		}
+
+		// If no pattern matched, return original URL
+		return url;
+	}
 </script>
 
 <form on:submit={handleSubmit} class="dynamic-form">

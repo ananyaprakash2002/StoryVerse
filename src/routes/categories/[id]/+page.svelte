@@ -594,9 +594,18 @@
 							<div class="dropdown-divider"></div>
 							
 							<div class="dropdown-section">
-								<div class="dropdown-label">Import</div>
-								<label class="dropdown-item import-item">
-									<span class="item-icon">📤</span>
+								<div class="dropdown-label">
+									Import
+									<button 
+										class="help-icon" 
+										title="Expected JSON Format"
+										on:click={(e) => { e.stopPropagation(); alert('Expected JSON Format:\n\n{\n  "category": "Category Name",\n  "exportDate": "2024-01-24T...",\n  "itemCount": 10,\n  "version": "1.0",\n  "items": [\n    {\n      "data": {\n        "field1": "value1",\n        "field2": "value2"\n      },\n      "cover_image_url": null,\n      "cover_image_path": null,\n      "api_source": null,\n      "api_id": null\n    }\n  ]\n}\n\nTip: Export an existing category to see the exact format!'); }}
+									>
+										ℹ️
+									</button>
+								</div>
+								<label class="dropdown-item import-item" class:importing>
+									<span class="item-icon">{importing ? '⏳' : '📤'}</span>
 									<span>{importing ? 'Importing...' : 'Import from JSON'}</span>
 									<input 
 										type="file" 
@@ -1064,6 +1073,40 @@
 		height: 1px;
 		background: var(--border-color);
 		margin: var(--space-xs) var(--space-md);
+	}
+
+	.help-icon {
+		background: none;
+		border: none;
+		color: var(--primary);
+		cursor: pointer;
+		padding: 0 4px;
+		margin-left: 4px;
+		font-size: 14px;
+		opacity: 0.7;
+		transition: opacity 0.2s ease;
+	}
+
+	.help-icon:hover {
+		opacity: 1;
+	}
+
+	.import-item.importing {
+		opacity: 0.7;
+		pointer-events: none;
+	}
+
+	.import-item .item-icon {
+		display: inline-block;
+	}
+
+	.importing .item-icon {
+		animation: pulse 1.5s ease-in-out infinite;
+	}
+
+	@keyframes pulse {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.5; }
 	}
 
 
