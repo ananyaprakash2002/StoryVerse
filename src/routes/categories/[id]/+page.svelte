@@ -38,6 +38,8 @@
 	// Export/Import
 	let showExportMenu = false;
 	let importing = false;
+	let showFormatHelpModal = false;
+	let copied = false;
 
 	// Edit Category
 	let showEditCategoryModal = false;
@@ -519,6 +521,36 @@
 		}
 	}
 
+	async function copyFormatTemplate() {
+		const template = `{
+  "category": "Category Name",
+  "exportDate": "2024-01-24T12:00:00.000Z",
+  "itemCount": 2,
+  "version": "1.0",
+  "items": [
+    {
+      "data": {
+        "field1": "value1",
+        "field2": "value2",
+        "field3": "value3"
+      },
+      "cover_image_url": null,
+      "cover_image_path": null,
+      "api_source": null,
+      "api_id": null
+    }
+  ]
+}`;
+		
+		try {
+			await navigator.clipboard.writeText(template);
+			copied = true;
+			setTimeout(() => copied = false, 2000);
+		} catch (err) {
+			toasts.error('Failed to copy to clipboard');
+		}
+	}
+
 	$: hasActiveFilters = searchQuery || Object.values(columnFilters).some((v) => v);
 	$: visibleFields = category?.fields?.filter(f => visibleColumns.has(f.name)) || [];
 	
@@ -599,7 +631,7 @@
 									<button 
 										class="help-icon" 
 										title="Expected JSON Format"
-										on:click={(e) => { e.stopPropagation(); alert('Expected JSON Format:\n\n{\n  "category": "Category Name",\n  "exportDate": "2024-01-24T...",\n  "itemCount": 10,\n  "version": "1.0",\n  "items": [\n    {\n      "data": {\n        "field1": "value1",\n        "field2": "value2"\n      },\n      "cover_image_url": null,\n      "cover_image_path": null,\n      "api_source": null,\n      "api_id": null\n    }\n  ]\n}\n\nTip: Export an existing category to see the exact format!'); }}
+										on:click={(e) => { e.stopPropagation(); showFormatHelpModal = true; }}
 									>
 										ℹ️
 									</button>
@@ -893,6 +925,64 @@
 			itemId={editingItem?.id || ''}
 		/>
 	{/if}
+</Modal>
+
+<!-- JSON Format Help Modal -->
+<Modal bind:isOpen={showFormatHelpModal} title="JSON Import Format">
+	<div class="format-help">
+		<div class="tip-section">
+			<span class="tip-icon">💡</span>
+			<p class="tip-text">Tip: Export an existing category to see the exact format! The exported file will have all the correct fields for your category.</p>
+		</div>
+		
+		<div class="code-wrapper">
+			<button class="copy-btn" on:click={copyFormatTemplate} title="Copy template">
+				{copied ? '✓ Copied!' : '📋 Copy template'}
+			</button>
+			<pre class="json-code"><code>{`{
+  "category": "Category Name",
+  "exportDate": "2024-01-24T12:00:00.000Z",
+  "itemCount": 2,
+  "version": "1.0",
+  "items": [
+    {
+      "data": {
+        "field1": "value1",
+        "field2": "value2",
+        "field3": "value3"
+      },
+      "cover_image_url": null,
+      "cover_image_path": null,
+      "api_source": null,
+      "api_id": null
+    },
+    {
+      "data": {
+        "field1": "another value",
+        "field2": "more data",
+        "field3": "etc"
+      },
+      "cover_image_url": "https://example.com/image.jpg",
+      "cover_image_path": "",
+      "api_source": "google_books",
+      "api_id": "abc123"
+    }
+  ]
+}`}</code></pre>
+		</div>
+		
+		<div class="field-description">
+			<h4>Field Descriptions:</h4>
+			<ul>
+				<li><code>category</code> - Name of the category (informational only)</li>
+				<li><code>exportDate</code> - ISO timestamp of export</li>
+				<li><code>itemCount</code> - Total number of items</li>
+				<li><code>version</code> - Format version (1.0)</li>
+				<li><code>items</code> - Array of items to import</li>
+				<li><code>data</code> - Your custom field data (field names must match your category schema)</li>
+			</ul>
+		</div>
+	</div>
 </Modal>
 
 
@@ -1378,6 +1468,117 @@
 	.edit-category-form input[type="color"] {
 		height: 42px;
 		cursor: pointer;
+	}
+
+	/* JSON Format Help Modal */
+	.format-help {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-lg);
+	}
+
+	.tip-section {
+		display: flex;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(59, 130, 246, 0.05));
+		border-left: 3px solid var(--primary);
+		border-radius: var(--radius-md);
+	}
+
+	.tip-icon {
+		font-size: 20px;
+		flex-shrink: 0;
+	}
+
+	.tip-text {
+		margin: 0;
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+		line-height: 1.5;
+	}
+
+	.code-wrapper {
+		position: relative;
+	}
+
+	.copy-btn {
+		position: absolute;
+		top: var(--space-sm);
+		right: var(--space-sm);
+		background: var(--primary);
+		color: white;
+		border: none;
+		padding: 6px 12px;
+		border-radius: var(--radius-sm);
+		font-size: var(--font-size-xs);
+		cursor: pointer;
+		transition: all 0.2s ease;
+		z-index: 1;
+		font-weight: 500;
+	}
+
+	.copy-btn:hover {
+		background: rgba(96, 165, 250, 0.9);
+		transform: translateY(-1px);
+	}
+
+	.copy-btn:active {
+		transform: translateY(0);
+	}
+
+	.json-code {
+		background: var(--bg-secondary);
+		border: 1px solid var(--border-color);
+		border-radius: var(--radius-md);
+		padding: var(--space-lg);
+		overflow-x: auto;
+		margin: 0;
+		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+		font-size: 13px;
+		line-height: 1.6;
+		max-height: 400px;
+		overflow-y: auto;
+	}
+
+	.json-code code {
+		color: var(--text-primary);
+		white-space: pre;
+	}
+
+	.field-description {
+		background: var(--bg-secondary);
+		padding: var(--space-md);
+		border-radius: var(--radius-md);
+		border: 1px solid var(--border-color);
+	}
+
+	.field-description h4 {
+		margin: 0 0 var(--space-sm) 0;
+		font-size: var(--font-size-md);
+		color: var(--text-primary);
+	}
+
+	.field-description ul {
+		margin: 0;
+		padding-left: var(--space-lg);
+		list-style-type: disc;
+	}
+
+	.field-description li {
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		margin-bottom: var(--space-xs);
+		line-height: 1.5;
+	}
+
+	.field-description code {
+		background: rgba(96, 165, 250, 0.1);
+		padding: 2px 6px;
+		border-radius: 3px;
+		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+		font-size: 12px;
+		color: var(--primary);
 	}
 
 	@media (max-width: 900px) {
