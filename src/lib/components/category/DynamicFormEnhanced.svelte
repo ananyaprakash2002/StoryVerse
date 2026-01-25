@@ -4,6 +4,8 @@
 	import DynamicField from './DynamicField.svelte';
 	import Button from '$lib/components/common/Button.svelte';
 	import APISearchModal from '$lib/components/media/APISearchModal.svelte';
+	import AniListSearchModal from '$lib/components/media/AniListSearchModal.svelte';
+	import type { AnimeData } from '$lib/services/api-integrations/anilist';
 	import ImageUpload from '$lib/components/media/ImageUpload.svelte';
 
 	export let fields: CategoryField[];
@@ -15,10 +17,17 @@
 	export let itemId = ''; // For image uploads
 
 	let showAPISearch = false;
+	let showAniListSearch = false;
 	let imageData: { url: string; path: string; apiSource?: string; apiId?: string } | null = null;
 
-	// Check if this is a Books-related category (only show for books)
+	// Check if this is a Books-related category
 	$: isBookCategory = categoryName.toLowerCase().includes('book');
+	
+	// Check if this is an Anime/Manga-related category
+	$: isAnimeCategory = categoryName.toLowerCase().includes('anime') || categoryName.toLowerCase().includes('anilist');
+	$: isMangaCategory = categoryName.toLowerCase().includes('manga') || categoryName.toLowerCase().includes('manhwa') || categoryName.toLowerCase().includes('webtoon');
+	$: isMediaCategory = isAnimeCategory || isMangaCategory;
+	$: defaultMediaType = (isAnimeCategory ? 'ANIME' : 'MANGA') as 'ANIME' | 'MANGA';
 
 	// Initialize values for all fields
 	fields.forEach((field) => {
@@ -91,6 +100,59 @@
 
 	function openAPISearch() {
 		showAPISearch = true;
+	}
+
+	function openAniListSearch() {
+		showAniListSearch = true;
+	}
+
+	function handleAnimeSelect(event: CustomEvent<AnimeData>) {
+		const media = event.detail;
+		
+		// Auto-fill form with anime/manga data - match fields by common names
+		const titleField = fields.find(f => f.name.toLowerCase().includes('title') || f.name.toLowerCase().includes('name'));
+		const episodeField = fields.find(f => f.name.toLowerCase().includes('episode'));
+		const chapterField = fields.find(f => f.name.toLowerCase().includes('chapter'));
+		const statusField = fields.find(f => f.name.toLowerCase().includes('status'));
+		const genreField = fields.find(f => f.name.toLowerCase().includes('genre'));
+		const ratingField = fields.find(f => f.name.toLowerCase().includes('rating') || f.name.toLowerCase().includes('score'));
+		const descriptionField = fields.find(f => f.name.toLowerCase().includes('description') || f.name.toLowerCase().includes('notes') || f.name.toLowerCase().includes('synopsis'));
+		const formatField = fields.find(f => f.name.toLowerCase().includes('format') || f.name.toLowerCase().includes('type'));
+		const studioField = fields.find(f => f.name.toLowerCase().includes('studio'));
+		const yearField = fields.find(f => f.name.toLowerCase().includes('year') || f.name.toLowerCase().includes('date'));
+		const linkField = fields.find(f => f.name.toLowerCase().includes('link') || f.name.toLowerCase().includes('url'));
+
+		if (titleField) values[titleField.name] = media.title;
+		if (episodeField && media.episodes) values[episodeField.name] = String(media.episodes);
+		if (chapterField && media.chapters) values[chapterField.name] = String(media.chapters);
+		if (statusField) values[statusField.name] = media.status || '';
+		if (genreField) {
+			// Handle both string and array genre fields
+			const genreFieldDef = fields.find(f => f.name === genreField.name);
+			if (genreFieldDef?.field_type === 'multiselect' || genreFieldDef?.field_type === 'tags') {
+				values[genreField.name] = media.genres;
+			} else {
+				values[genreField.name] = media.genres.join(', ');
+			}
+		}
+		if (ratingField && media.score) values[ratingField.name] = media.score;
+		if (descriptionField) values[descriptionField.name] = media.description || '';
+		if (formatField) values[formatField.name] = media.format || '';
+		if (studioField) values[studioField.name] = media.studios.join(', ');
+		if (yearField && media.startDate) values[yearField.name] = media.startDate;
+		if (linkField) values[linkField.name] = media.siteUrl;
+
+		// Store cover image data
+		if (media.coverImage) {
+			imageData = {
+				url: media.coverImage,
+				path: '',
+				apiSource: 'anilist',
+				apiId: media.id
+			};
+		}
+
+		showAniListSearch = false;
 	}
 
 	// Auto-update reading link when chapter changes
@@ -166,6 +228,16 @@
 		</div>
 	{/if}
 
+	<!-- AniList Search Button (only for anime/manga categories) -->
+	{#if isMediaCategory}
+		<div class="api-search-section anilist">
+			<p class="helper-text">📺 Search AniList to auto-fill {isAnimeCategory ? 'anime' : 'manga'} details</p>
+			<Button type="button" variant="secondary" onClick={openAniListSearch}>
+				🔍 Search AniList
+			</Button>
+		</div>
+	{/if}
+
 	<!-- Cover Image Upload Section -->
 	<div class="image-section">
 		<h4 class="section-label">Cover Image (Optional)</h4>
@@ -200,6 +272,14 @@
 	isOpen={showAPISearch} 
 	onClose={() => showAPISearch = false}
 	on:select={handleBookSelect}
+/>
+
+<!-- AniList Search Modal -->
+<AniListSearchModal 
+	isOpen={showAniListSearch} 
+	onClose={() => showAniListSearch = false}
+	defaultType={defaultMediaType}
+	on:select={handleAnimeSelect}
 />
 
 <style>

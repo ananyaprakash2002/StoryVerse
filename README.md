@@ -38,8 +38,13 @@ A beautiful, modern web application for tracking your books, manga, anime, movie
 - 🌙 **Dark/Light Theme**: Toggle between themes with system preference detection and chart re-rendering
 - 📱 **Responsive Design**: Works beautifully on desktop, tablet, and mobile
 - ✨ **Modern UI**: Premium glassmorphism effects and smooth micro-animations
-- 🖼️ **Cover Images**: Add cover images to your tracked items with Google Books integration
+- 🖼️ **Cover Images**: Add cover images to your tracked items
 - 🎯 **Keyboard Accessible**: Full keyboard navigation support for better accessibility
+
+### API Integrations
+- 📚 **Google Books API**: Search and auto-fill book details (title, author, ISBN, cover)
+- 📺 **AniList API**: Search anime/manga and auto-fill details (title, episodes, genres, rating, cover)
+- 🔗 **Smart URL Updates**: Chapter/episode links auto-update when you change the number
 
 ### Security
 - 🔐 **Authentication**: Secure user accounts with Supabase Auth
@@ -84,8 +89,10 @@ Edit `.env` with your Supabase credentials:
 ```
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
-VITE_GOOGLE_BOOKS_API_KEY=your-google-api-key-here
+VITE_GOOGLE_BOOKS_API_KEY=your-google-api-key-here  # Optional: for book search
 ```
+
+> **Note**: AniList API requires no API key - it works out of the box!
 
 ### 4. Run Development Server
 
@@ -123,6 +130,9 @@ src/
 │   │   ├── layout/      # Navigation, sidebar
 │   │   └── media/       # Media-related components
 │   ├── services/        # API/database layer
+│   │   └── api-integrations/  # External API services
+│   │       ├── google-books.ts  # Google Books API
+│   │       └── anilist.ts       # AniList GraphQL API
 │   ├── stores/          # Global state (theme, UI, user)
 │   ├── types/           # TypeScript definitions
 │   └── utils/           # Utility functions
