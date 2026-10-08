@@ -277,7 +277,7 @@
 						<button
 							class="activity-item"
 							style="animation-delay: {0.5 + index * 0.08}s"
-							on:click={() => goto(`/categories/${activity.categoryId}`)}
+							on:click={() => goto(`/categories/${activity.categoryId}/items/${activity.item.id}`)}
 						>
 							<span class="activity-icon">{activity.categoryIcon}</span>
 							<div class="activity-content">
