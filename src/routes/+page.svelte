@@ -747,22 +747,62 @@
 		color: var(--text-muted);
 	}
 
+	@media (max-width: 900px) {
+		.categories-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
 	@media (max-width: 768px) {
 		.welcome-section {
 			flex-direction: column;
 			gap: var(--space-md);
+			margin-bottom: var(--space-xl);
 		}
 
-		.welcome-section h1 {
-			font-size: 2rem;
+		.welcome-title {
+			font-size: 1.75rem !important;
 		}
 
+		.welcome-subtitle {
+			font-size: var(--font-size-base) !important;
+		}
+
+		/* 2-column stats on mobile - much better use of space */
 		.stats-row {
-			grid-template-columns: 1fr;
+			grid-template-columns: repeat(2, 1fr);
+			gap: var(--space-md);
+			margin-bottom: var(--space-xl);
+		}
+
+		.stat-box {
+			padding: var(--space-lg);
+			gap: var(--space-md);
+		}
+
+		.stat-icon {
+			font-size: 1.75rem !important;
+		}
+
+		.stat-value {
+			font-size: 2rem !important;
 		}
 
 		.categories-grid {
 			grid-template-columns: 1fr;
+		}
+
+		.distribution-item {
+			padding: var(--space-md);
+		}
+
+		.activity-item {
+			padding: var(--space-md) var(--space-lg);
+			gap: var(--space-md);
+		}
+
+		.activity-icon {
+			font-size: 1.5rem !important;
 		}
 	}
 </style>

@@ -443,21 +443,42 @@
 		letter-spacing: 0.05em;
 	}
 
+	@media (max-width: 900px) {
+		.categories-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
 	@media (max-width: 768px) {
 		.hero-title {
-			font-size: 2rem;
+			font-size: 1.75rem;
 		}
 
 		.hero-section {
-			padding: var(--space-xl);
+			padding: var(--space-xl) var(--space-lg);
+			margin-bottom: var(--space-xl);
 		}
 
 		.page-header {
 			flex-direction: column;
 			gap: var(--space-md);
+			align-items: stretch;
 		}
 
-		.categories-grid,
+		.page-header > div:last-child {
+			align-self: flex-start;
+		}
+
+		.categories-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.templates-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	@media (max-width: 480px) {
 		.templates-grid {
 			grid-template-columns: 1fr;
 		}

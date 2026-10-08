@@ -554,15 +554,19 @@
 	$: hasActiveFilters = searchQuery || Object.values(columnFilters).some((v) => v);
 	$: visibleFields = category?.fields?.filter(f => visibleColumns.has(f.name)) || [];
 	
-	// Define which columns to show in the table (only key fields)
+	// Define which columns to show in the table (key fields only)
 	$: tableColumns = category?.fields?.filter(f => {
 		const fieldName = f.name.toLowerCase();
 		return fieldName.includes('title') || 
 		       fieldName.includes('name') ||
 		       fieldName.includes('author') || 
 		       fieldName.includes('status') ||
-		       fieldName.includes('tag');
+		       fieldName.includes('tag') ||
+		       fieldName.includes('chapter');
 	}) || [];
+
+	// Derive the item order/chapter number based on created_at index
+	$: itemIndexMap = Object.fromEntries(items.map((item, i) => [item.id, i + 1]));
 </script>
 
 <div class="page container">
@@ -589,19 +593,28 @@
 				</div>
 			</div>
 			<div class="header-actions">
-				<Button variant="primary" onClick={openAddModal}>+ Add Item</Button>
-				<Button variant="secondary" onClick={openEditCategoryModal}>✏️ Edit Category</Button>
-				<button class="btn btn-danger" on:click={handleDeleteCategory}>
-					Delete Category
+				<Button variant="primary" onClick={openAddModal}>
+					<span class="btn-full">+ Add Item</span>
+					<span class="btn-short">+</span>
+				</Button>
+				<button class="btn btn-secondary action-btn" on:click={openEditCategoryModal} title="Edit Category">
+					<span>✏️</span>
+					<span class="btn-full">Edit</span>
+				</button>
+				<button class="btn btn-danger action-btn" on:click={handleDeleteCategory} title="Delete Category">
+					<span>🗑️</span>
+					<span class="btn-full">Delete</span>
 				</button>
 				
 				<!-- Export/Import Menu -->
 				<div class="export-menu dropdown" class:show={showExportMenu}>
 					<button 
-						class="btn btn-secondary export-btn"
+						class="btn btn-secondary export-btn action-btn"
 						on:click={() => showExportMenu = !showExportMenu}
+						title="Export / Import"
 					>
-						📥 Export/Import
+						<span>📥</span>
+						<span class="btn-full">Export/Import</span>
 						<span class="dropdown-arrow">▼</span>
 					</button>
 					
@@ -804,6 +817,8 @@
 									on:change={toggleSelectAll}
 								/>
 							</th>
+							<!-- Chapter Number Column -->
+							<th class="chapter-col">#</th>
 							{#each tableColumns as field}
 								<th>
 									<button
@@ -846,6 +861,10 @@
 										checked={selectedItems.has(item.id)}
 										on:change={() => toggleSelection(item.id)}
 									/>
+								</td>
+								<!-- Chapter Number -->
+								<td class="chapter-col">
+									<span class="chapter-badge">{itemIndexMap[item.id] ?? ''}</span>
 								</td>
 								{#each tableColumns as field}
 									<td>
@@ -1312,9 +1331,78 @@
 		border: 1px solid rgba(96, 165, 250, 0.2);
 	}
 
+	/* Chapter badge in table */
+	.chapter-col {
+		width: 48px;
+		text-align: center;
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.chapter-badge {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		background: linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(167, 139, 250, 0.15));
+		border: 1px solid rgba(96, 165, 250, 0.25);
+		color: var(--primary);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		margin: 0 auto;
+	}
+
+	/* Action buttons in header - responsive behavior */
+	.action-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	.btn-short {
+		display: none;
+	}
+
+	.btn-full {
+		display: inline;
+	}
+
 	@media (max-width: 768px) {
 		.page-header {
 			flex-direction: column;
+			gap: var(--space-md);
+		}
+
+		.header-actions {
+			width: 100%;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+			scrollbar-width: none;
+			flex-wrap: nowrap;
+		}
+
+		.header-actions::-webkit-scrollbar {
+			display: none;
+		}
+
+		/* On mobile, show short label and hide long label */
+		.btn-short {
+			display: inline;
+		}
+
+		.btn-full {
+			display: none;
+		}
+
+		.action-btn {
+			padding: var(--space-sm) var(--space-md);
+			white-space: nowrap;
+			flex-shrink: 0;
 		}
 
 		.table-container {
@@ -1330,6 +1418,13 @@
 			max-width: 100%;
 		}
 
+		.category-icon {
+			font-size: 2rem !important;
+		}
+
+		.category-title {
+			gap: var(--space-md);
+		}
 	}
 
 	/* Edit Category modal improvements */

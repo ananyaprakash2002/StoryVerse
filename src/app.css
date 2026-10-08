@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&display=swap');
 
 /* ==================== CSS RESET ==================== */
 *,
@@ -301,6 +301,7 @@ a:hover {
 	transition: all var(--transition-fast);
 	text-decoration: none;
 	white-space: nowrap;
+	min-height: 38px; /* Touch-friendly minimum */
 }
 
 .btn:disabled {
@@ -660,5 +661,39 @@ tr:hover {
 
 	.toast {
 		min-width: auto;
+	}
+}
+/* ==================== MOBILE ENHANCEMENTS ==================== */
+@media (max-width: 768px) {
+	/* Sheet-style modal on mobile - slides from bottom */
+	.modal {
+		border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+		margin: auto 0 0 0;
+	}
+
+	.modal-overlay {
+		align-items: flex-end;
+		padding: 0;
+	}
+
+	/* Toast appears above bottom nav */
+	.toast-container {
+		top: auto;
+		bottom: 90px;
+	}
+
+	/* Compact table cells on mobile */
+	th {
+		padding: 8px;
+		font-size: 0.7rem;
+	}
+
+	td {
+		padding: 8px;
+	}
+
+	/* Larger touch targets on mobile */
+	.btn {
+		min-height: 44px;
 	}
 }

@@ -153,4 +153,11 @@
 	main {
 		min-height: calc(100vh - 80px);
 	}
+
+	@media (max-width: 768px) {
+		main {
+			min-height: 100vh;
+			padding-bottom: 80px; /* Space for bottom nav */
+		}
+	}
 </style>
